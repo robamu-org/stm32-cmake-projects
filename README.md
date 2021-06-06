@@ -1,7 +1,16 @@
 # STM32H743ZI-Nucleo Minimal CMake project
 
 This repository provides most components to cross-compile with `CMake` for the STM32 Nucleo-H743ZI
-board.
+board. It uses the `CMake` support provided by the `stm32-cmake` repository.
+
+The FreeRTOS kernel and the STM32H7Cube repository are integrated here as submodules.
+Run the following commands in git to clone the submodules:
+
+```sh
+git submodule init
+git submodule update --init --recursive
+```
+
 
 ## Prerequisites for building
 
