@@ -1,2 +1,12 @@
+# Build folders
 /**/build*
+
+# VS Code
 .vscode/.*
+
+# Eclipse
+.settings
+.cproject
+.project
+!eclipse/.cproject
+!eclipse/.project
