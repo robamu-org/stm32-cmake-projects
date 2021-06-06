@@ -1,0 +1,21 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+    {
+        "cwd": "${workspaceRoot}",
+        "executable": "${workspaceRoot}/freertos/build/stm32-freertos.elf",
+        "name": "Debug Microcontroller",
+        "request": "launch",
+        "type": "cortex-debug",
+        "device": "STM32H743ZI",
+        "configFiles": [
+            "board/st_nucleo_h743zi.cfg"
+        ],
+        "runToMain": true,
+        "servertype": "openocd"
+    },
+    ]
+}
