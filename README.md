@@ -12,6 +12,15 @@ board.
 3. Windows: It is strongly recommended to install and use a Unix environment
    like [MinGW64](https://www.msys2.org/)
 
+## Setting up Windows MinGW64
+
+Install MinGW64 as part of [MSYS2](https://www.msys2.org/) first.
+Afer that, run the following command in the MinGW64 shell to install `make` and `CMake`
+
+```sh
+pacman -S mingw-w64-x86_64-cmake mingw-w64-x86_64-make
+```
+
 ## Building the Minimal Project or the FreeRTOS project
 
 The project expect the cross-compiler path to be set in the `STM32_TOOLCHAIN_PATH` environmental
