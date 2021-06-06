@@ -1,13 +1,16 @@
 # STM32H743ZI-Nucleo Minimal CMake project
 
-This repository provides most components to cross-compile with `CMake` for the Nucleo-H743ZI board.
+This repository provides most components to cross-compile with `CMake` for the STM32 Nucleo-H743ZI
+board.
 
 ## Prerequisites for building
 
 1. `CMake` installed
-2. Cross-compiler installed. It is recommended to install the [xPacks ARM cross compiler](https://xpack.github.io/arm-none-eabi-gcc/install/)
+2. ARM cross-compiler installed. It is recommended to install the 
+   [xPacks ARM cross compiler](https://xpack.github.io/arm-none-eabi-gcc/install/)
    because it offers good Eclipse integration.
-3. Windows: It is strongly recommended to install and use a Unix environment like [MinGW64](https://www.msys2.org/)
+3. Windows: It is strongly recommended to install and use a Unix environment
+   like [MinGW64](https://www.msys2.org/)
 
 ## Building the Minimal Project or the FreeRTOS project
 
