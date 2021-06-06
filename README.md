@@ -11,7 +11,6 @@ git submodule init
 git submodule update --init --recursive
 ```
 
-
 ## Prerequisites for building
 
 1. `CMake` installed
@@ -20,6 +19,7 @@ git submodule update --init --recursive
    because it offers good Eclipse integration.
 3. Windows: It is strongly recommended to install and use a Unix environment
    like [MinGW64](https://www.msys2.org/)
+4. Debugging: [OpenOCD](https://xpack.github.io/openocd/) installed
 
 ## Setting up Windows MinGW64
 
@@ -60,3 +60,14 @@ mkdir build && cd build
 cmake ..
 cmake --build . -j
 ```
+
+# Using VS Code
+
+VS code files were supplied to perform debugging and building with VS code after the build system was
+generated. The only prerequsite is to install the Cortex-Debug plugin. You can do this in the command
+line with
+
+```sh
+code --install-extension marus25.cortex-debug
+```
+
