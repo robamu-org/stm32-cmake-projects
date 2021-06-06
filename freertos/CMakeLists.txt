@@ -17,7 +17,7 @@ include(${STM32_CMAKE_PATH}/cmake/stm32/devices.cmake)
 stm32_print_devices_by_family(FAMILY H7)
 
 find_package(CMSIS COMPONENTS STM32H743ZI STM32H7_M7 REQUIRED)
-find_package(HAL COMPONENTS STM32H7_M7 STM32H743ZI RCC GPIO CORTEX REQUIRED)
+find_package(HAL COMPONENTS STM32H7M7 STM32H743ZI RCC GPIO CORTEX REQUIRED)
 find_package(FreeRTOS COMPONENTS ARM_CM7 REQUIRED)
 
 add_executable(${TARGET_NAME})
@@ -35,9 +35,16 @@ target_link_libraries(stm32-freertos PRIVATE
     FreeRTOS::Timers
     FreeRTOS::Heap::1
     FreeRTOS::ARM_CM7 
-    # HAL::STM32::H7::RCC
-    # HAL::STM32::H7::GPIO
-    # HAL::STM32::H7::CORTEX
+    HAL::STM32::H7::M7::RCC
+    HAL::STM32::H7::M7::GPIO
+    HAL::STM32::H7::M7::CORTEX
     CMSIS::STM32::H743ZI::M7
     STM32::NoSys
+)
+
+add_custom_command(
+	TARGET ${TARGET_NAME}
+	POST_BUILD
+	COMMAND echo Generating binary file ${CMAKE_PROJECT_NAME}.bin..
+	COMMAND ${CMAKE_OBJCOPY} -O binary ${TARGET_NAME}.elf ${TARGET_NAME}.bin
 )

@@ -2,12 +2,12 @@
 #include <task.h>
 #include <timers.h>
 
-#include <stm32f4xx_hal.h>
+#include <stm32h7xx_hal.h>
 
-// STM32F4-Discovery green led - PD12
-#define LED_PORT                GPIOD
-#define LED_PIN                 GPIO_PIN_12
-#define LED_PORT_CLK_ENABLE     __HAL_RCC_GPIOD_CLK_ENABLE
+// STM32H743ZI green led - PD12
+#define LED_PORT                GPIOB
+#define LED_PIN                 GPIO_PIN_7
+#define LED_PORT_CLK_ENABLE     __HAL_RCC_GPIOB_CLK_ENABLE
 
 static void blinky(void *arg)
 {
@@ -45,15 +45,15 @@ int main(void)
     return 0;
 }
 
-void vApplicationTickHook(void)
+extern "C" void vApplicationTickHook(void)
 {
 }
 
-void vApplicationIdleHook(void)
+extern "C" void vApplicationIdleHook(void)
 {
 }
 
-void vApplicationMallocFailedHook(void)
+extern "C" void vApplicationMallocFailedHook(void)
 {
     taskDISABLE_INTERRUPTS();
     for(;;);
