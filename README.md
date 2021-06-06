@@ -1,0 +1,1 @@
+# STM32H743ZI-Nucleo minimal CMake project
