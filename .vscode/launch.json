@@ -7,7 +7,20 @@
     {
         "cwd": "${workspaceRoot}",
         "executable": "${workspaceRoot}/freertos/build/stm32-freertos.elf",
-        "name": "Debug Microcontroller",
+        "name": "Debug FreeRTOS STM32H743ZI",
+        "request": "launch",
+        "type": "cortex-debug",
+        "device": "STM32H743ZI",
+        "configFiles": [
+            "board/st_nucleo_h743zi.cfg"
+        ],
+        "runToMain": true,
+        "servertype": "openocd"
+    },
+    {
+        "cwd": "${workspaceRoot}",
+        "executable": "${workspaceRoot}/minimal/build/stm32-freertos.elf",
+        "name": "Debug Minimal STM32H743ZI",
         "request": "launch",
         "type": "cortex-debug",
         "device": "STM32H743ZI",

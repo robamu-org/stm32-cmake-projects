@@ -4,9 +4,40 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build FreeRTOS Debug",
+            "label": "Build FreeRTOS",
             "type": "shell",
-            "command": "echo Hello"
-        }
+            "options": {
+                "cwd": "${workspaceRoot}/freertos/build"
+            },
+            "command": "cmake",
+            "args": [
+                "--build",
+                ".",
+                "-j"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Build Minimal",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceRoot}/minimal/build"
+            },
+            "command": "cmake",
+            "args": [
+                "--build",
+                ".",
+                "-j"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
     ]
 }
