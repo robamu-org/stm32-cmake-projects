@@ -31,6 +31,8 @@ export STM32_TOOLCHAIN_PATH=<pathToToolchainBinaries>
 ```
 
 On Windows, when using MinGW64, add `-G "MinGW Makefiles"` to use MinGW makefiles.
+You can flash the generated binary file to the connect board via drag-and-drop
+or you can use Eclipse and OpenOCD to perform debugging with the `.elf` file.
 
 ### Minimal Project
 
@@ -38,6 +40,7 @@ On Windows, when using MinGW64, add `-G "MinGW Makefiles"` to use MinGW makefile
 cd minimal
 mkdir build && cd build
 cmake ..
+cmake --build . -j
 ```
 
 ### FreeRTOS Project
@@ -46,4 +49,5 @@ cmake ..
 cd freertos
 mkdir build && cd build
 cmake ..
+cmake --build . -j
 ```
