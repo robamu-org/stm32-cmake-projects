@@ -13,8 +13,8 @@ set(CMAKE_TOOLCHAIN_FILE ${STM32_CMAKE_PATH}/cmake/stm32_gcc.cmake)
 project(${TARGET_NAME} CXX C ASM)
 set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 
-include(${STM32_CMAKE_PATH}/cmake/stm32/devices.cmake)
-stm32_print_devices_by_family(FAMILY H7)
+# include(${STM32_CMAKE_PATH}/cmake/stm32/devices.cmake)
+# stm32_print_devices_by_family(FAMILY H7)
 
 find_package(CMSIS COMPONENTS STM32H743ZI STM32H7_M7 REQUIRED)
 find_package(HAL COMPONENTS STM32H7M7 STM32H743ZI RCC GPIO CORTEX REQUIRED)
