@@ -1,35 +1,35 @@
 /**
-  ******************************************************************************
-  * @file    SPI/SPI_FullDuplex_ComDMA/Src/main.c
-  * @author  MCD Application Team
-  * @brief   This sample code shows how to use STM32H7xx SPI HAL API to transmit
-  *          and receive a data buffer with a communication process based on
-  *          DMA transfer.
-  *          The communication is done using 2 Boards.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    SPI/SPI_FullDuplex_ComDMA/Src/main.c
+ * @author  MCD Application Team
+ * @brief   This sample code shows how to use STM32H7xx SPI HAL API to transmit
+ *          and receive a data buffer with a communication process based on
+ *          DMA transfer.
+ *          The communication is done using 2 Boards.
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
+ * All rights reserved.</center></h2>
+ *
+ * This software component is licensed by ST under BSD 3-Clause license,
+ * the "License"; You may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at:
+ *                        opensource.org/licenses/BSD-3-Clause
+ *
+ ******************************************************************************
+ */
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
 /** @addtogroup STM32H7xx_HAL_Examples
-  * @{
-  */
+ * @{
+ */
 
 /** @addtogroup SPI_FullDuplex_ComDMA
-  * @{
-  */
+ * @{
+ */
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -39,37 +39,54 @@ enum {
   TRANSFER_ERROR
 };
 
+typedef enum {
+    MODE_0,
+    MODE_1,
+    MODE_2,
+    MODE_3
+}SpiModes;
+
 /* Private macro -------------------------------------------------------------*/
 /* Uncomment this line to use the board as master, if not it is used as slave */
-//#define MASTER_BOARD
+#define MASTER_BOARD
 
 /* Private variables ---------------------------------------------------------*/
 /* SPI handler declaration */
 SPI_HandleTypeDef SpiHandle;
 
 /* Buffer used for transmission */
-const uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI Message ********* SPI Message *********";
+//const uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI Message ********* SPI Message *********";
 
 /* Buffer used for reception */
-#define BUFFER_ALIGNED_SIZE (((BUFFERSIZE+31)/32)*32)
-ALIGN_32BYTES(uint8_t aRxBuffer[BUFFER_ALIGNED_SIZE]);
+#define  RX_BUF_LEN  32
+ALIGN_32BYTES(uint8_t aRxBuffer[RX_BUF_LEN]);
 
 /* transfer state */
 __IO uint32_t wTransferState = TRANSFER_WAIT;
+GPIO_InitTypeDef chipSelect = {};
+uint16_t chipSelectPin = GPIO_PIN_14;
+GPIO_TypeDef* chipSelectPort = GPIOD;
+
+// L3GD20H Gyroscope constants
+const uint8_t WHO_AM_I_REG = 0b00001111;
+const uint8_t STM_READ_MASK = 0b10000000;
+const uint8_t EXPECTED_WHO_AM_I_VAL = 0b11010111;
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void Error_Handler(void);
-static uint16_t Buffercmp(uint8_t *pBuffer1, uint8_t *pBuffer2, uint16_t BufferLength);
 static void CPU_CACHE_Enable(void);
+void simpleTransfer(uint8_t* txBuf);
+uint32_t getPrescaler(uint32_t clock_src_freq, uint32_t baudrate_mbps);
+void assignSpiMode(SpiModes spiMode, SPI_HandleTypeDef* spiHandle);
 
 /* Private functions ---------------------------------------------------------*/
 
 /**
-  * @brief  Main program
-  * @param  None
-  * @retval None
-  */
+ * @brief  Main program
+ * @param  None
+ * @retval None
+ */
 int main(void)
 {
   /* Enable the CPU Cache */
@@ -83,7 +100,7 @@ int main(void)
          handled in milliseconds basis.
        - Set NVIC Group Priority to 4
        - Low Level Initialization
-     */
+   */
   HAL_Init();
 
   /* Configure the system clock to 400 MHz */
@@ -97,10 +114,9 @@ int main(void)
   /*##-1- Configure the SPI peripheral #######################################*/
   /* Set the SPI parameters */
   SpiHandle.Instance               = SPIx;
-  SpiHandle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+  SpiHandle.Init.BaudRatePrescaler = getPrescaler(HAL_RCC_GetHCLKFreq(), 10000000);
+  assignSpiMode(MODE_3, &SpiHandle);
   SpiHandle.Init.Direction         = SPI_DIRECTION_2LINES;
-  SpiHandle.Init.CLKPhase          = SPI_PHASE_1EDGE;
-  SpiHandle.Init.CLKPolarity       = SPI_POLARITY_LOW;
   SpiHandle.Init.DataSize          = SPI_DATASIZE_8BIT;
   SpiHandle.Init.FirstBit          = SPI_FIRSTBIT_MSB;
   SpiHandle.Init.TIMode            = SPI_TIMODE_DISABLE;
@@ -123,29 +139,42 @@ int main(void)
     Error_Handler();
   }
 
-#ifdef MASTER_BOARD
-  /* Configure User push-button button */
-  BSP_PB_Init(BUTTON_USER,BUTTON_MODE_GPIO);
-  /* Wait for User push-button press before starting the Communication */
-  while (BSP_PB_GetState(BUTTON_USER) != GPIO_PIN_SET)
-  {
-    BSP_LED_Toggle(LED1);
-    HAL_Delay(100);
-  }
-  BSP_LED_Off(LED1);
-#endif /* MASTER_BOARD */
+  //#ifdef MASTER_BOARD
+  //  /* Configure User push-button button */
+  //  BSP_PB_Init(BUTTON_USER,BUTTON_MODE_GPIO);
+  //  /* Wait for User push-button press before starting the Communication */
+  //  while (BSP_PB_GetState(BUTTON_USER) != GPIO_PIN_SET)
+  //  {
+  //    BSP_LED_Toggle(LED1);
+  //    HAL_Delay(100);
+  //  }
+  //  BSP_LED_Off(LED1);
+  //#endif /* MASTER_BOARD */
 
-  /*##-2- Start the Full Duplex Communication process ########################*/  
-  /* While the SPI in TransmitReceive process, user can transmit data through 
+  uint16_t txBuf[16] = {};
+
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+  chipSelect.Pin = chipSelectPin;
+  chipSelect.Mode = GPIO_MODE_OUTPUT_PP;
+  HAL_GPIO_Init(chipSelectPort, &chipSelect);
+  HAL_GPIO_WritePin(chipSelectPort, chipSelectPin, GPIO_PIN_SET);
+
+
+  txBuf[0] = WHO_AM_I_REG | STM_READ_MASK;
+  txBuf[1] = 0;
+
+  HAL_GPIO_WritePin(chipSelectPort, chipSelectPin, GPIO_PIN_RESET);
+  /*##-2- Start the Full Duplex Communication process ########################*/
+  /* While the SPI in TransmitReceive process, user can transmit data through
      "aTxBuffer" buffer & receive data through "aRxBuffer" */
-  if(HAL_SPI_TransmitReceive_DMA(&SpiHandle, (uint8_t*)aTxBuffer, (uint8_t *)aRxBuffer, BUFFERSIZE) != HAL_OK)
+  if(HAL_SPI_TransmitReceive_DMA(&SpiHandle, (uint8_t*)txBuf, (uint8_t *)aRxBuffer, 2) != HAL_OK)
   {
     /* Transfer error in transmission process */
     Error_Handler();
   }
 
-  /*##-3- Wait for the end of the transfer ###################################*/  
-  /*  Before starting a new communication transfer, you must wait the callback call 
+  /*##-3- Wait for the end of the transfer ###################################*/
+  /*  Before starting a new communication transfer, you must wait the callback call
       to get the transfer complete confirmation or an error detection.
       For simplicity reasons, this example is just waiting till the end of the 
       transfer, but application may perform other tasks while transfer operation
@@ -153,59 +182,123 @@ int main(void)
   while (wTransferState == TRANSFER_WAIT)
   {
   }
-  
+
   /* Invalidate cache prior to access by CPU */
-  SCB_InvalidateDCache_by_Addr ((uint32_t *)aRxBuffer, BUFFERSIZE);
+  SCB_InvalidateDCache_by_Addr ((uint32_t *)aRxBuffer, RX_BUF_LEN);
 
   switch(wTransferState)
   {
-    case TRANSFER_COMPLETE :
-      /*##-4- Compare the sent and received buffers ##############################*/
-      if(Buffercmp((uint8_t*)aTxBuffer, (uint8_t*)aRxBuffer, BUFFERSIZE))
-      {
-        /* Processing Error */
-        Error_Handler();     
-      }
-      break;
-    default : 
-      Error_Handler();
-      break;
+  case TRANSFER_COMPLETE :
+    /*##-4- Compare the sent and received buffers ##############################*/
+    if(aRxBuffer[1] != EXPECTED_WHO_AM_I_VAL) {
+      // Successfully read
+      BSP_LED_On(LED3);
+    }
+    break;
+  default :
+    Error_Handler();
+    break;
   }
-  
-  /* Infinite loop */  
+
+  /* Infinite loop */
   while (1)
   {
   }
 }
 
+uint32_t getPrescaler(uint32_t clock_src_freq, uint32_t baudrate_mbps) {
+  uint32_t divisor = 0;
+  uint32_t spi_clk = clock_src_freq;
+  uint32_t presc = 0;
+  static const uint32_t baudrate[] = {
+      SPI_BAUDRATEPRESCALER_2,
+      SPI_BAUDRATEPRESCALER_4,
+      SPI_BAUDRATEPRESCALER_8,
+      SPI_BAUDRATEPRESCALER_16,
+      SPI_BAUDRATEPRESCALER_32,
+      SPI_BAUDRATEPRESCALER_64,
+      SPI_BAUDRATEPRESCALER_128,
+      SPI_BAUDRATEPRESCALER_256,
+  };
+
+  while( spi_clk > baudrate_mbps) {
+    presc = baudrate[divisor];
+    if (++divisor > 7)
+      break;
+
+    spi_clk = ( spi_clk >> 1);
+  }
+
+  return presc;
+}
+
+void assignSpiMode(SpiModes spiMode, SPI_HandleTypeDef* spiHandle) {
+    switch(spiMode) {
+    case(MODE_0): {
+        spiHandle->Init.CLKPolarity = SPI_POLARITY_LOW;
+        spiHandle->Init.CLKPhase = SPI_PHASE_1EDGE;
+        break;
+    }
+    case(MODE_1): {
+        spiHandle->Init.CLKPolarity = SPI_POLARITY_LOW;
+        spiHandle->Init.CLKPhase = SPI_PHASE_2EDGE;
+        break;
+    }
+    case(MODE_2): {
+        spiHandle->Init.CLKPolarity = SPI_POLARITY_HIGH;
+        spiHandle->Init.CLKPhase = SPI_PHASE_1EDGE;
+        break;
+    }
+    case(MODE_3): {
+        spiHandle->Init.CLKPolarity = SPI_POLARITY_HIGH;
+        spiHandle->Init.CLKPhase = SPI_PHASE_2EDGE;
+        break;
+    }
+    }
+}
+
+// This is a transfer using polling for simple testing
+void simpleTransfer(uint8_t* txBuf) {
+  HAL_StatusTypeDef status = HAL_SPI_TransmitReceive(&SpiHandle, (uint8_t*) txBuf,
+      aRxBuffer, 2, 1000);
+  if(status == HAL_OK) {
+    if(aRxBuffer[1] != EXPECTED_WHO_AM_I_VAL) {
+      // Successfully read
+      BSP_LED_On(LED3);
+    }
+  }
+
+  while(1) {}
+}
+
 /**
-  * @brief  System Clock Configuration
-  *         The system Clock is configured as follow : 
-  *            System Clock source            = PLL (HSE BYPASS)
-  *            SYSCLK(Hz)                     = 400000000 (CPU Clock)
-  *            HCLK(Hz)                       = 200000000 (AXI and AHBs Clock)
-  *            AHB Prescaler                  = 2
-  *            D1 APB3 Prescaler              = 2 (APB3 Clock  100MHz)
-  *            D2 APB1 Prescaler              = 2 (APB1 Clock  100MHz)
-  *            D2 APB2 Prescaler              = 2 (APB2 Clock  100MHz)
-  *            D3 APB4 Prescaler              = 2 (APB4 Clock  100MHz)
-  *            HSE Frequency(Hz)              = 8000000
-  *            PLL_M                          = 4
-  *            PLL_N                          = 400
-  *            PLL_P                          = 2
-  *            PLL_Q                          = 4
-  *            PLL_R                          = 2
-  *            VDD(V)                         = 3.3
-  *            Flash Latency(WS)              = 4
-  * @param  None
-  * @retval None
-  */
+ * @brief  System Clock Configuration
+ *         The system Clock is configured as follow :
+ *            System Clock source            = PLL (HSE BYPASS)
+ *            SYSCLK(Hz)                     = 400000000 (CPU Clock)
+ *            HCLK(Hz)                       = 200000000 (AXI and AHBs Clock)
+ *            AHB Prescaler                  = 2
+ *            D1 APB3 Prescaler              = 2 (APB3 Clock  100MHz)
+ *            D2 APB1 Prescaler              = 2 (APB1 Clock  100MHz)
+ *            D2 APB2 Prescaler              = 2 (APB2 Clock  100MHz)
+ *            D3 APB4 Prescaler              = 2 (APB4 Clock  100MHz)
+ *            HSE Frequency(Hz)              = 8000000
+ *            PLL_M                          = 4
+ *            PLL_N                          = 400
+ *            PLL_P                          = 2
+ *            PLL_Q                          = 4
+ *            PLL_R                          = 2
+ *            VDD(V)                         = 3.3
+ *            Flash Latency(WS)              = 4
+ * @param  None
+ * @retval None
+ */
 static void SystemClock_Config(void)
 {
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
   RCC_OscInitTypeDef RCC_OscInitStruct;
   HAL_StatusTypeDef ret = HAL_OK;
-  
+
   /*!< Supply configuration update enable */
   HAL_PWREx_ConfigSupply(PWR_LDO_SUPPLY);
 
@@ -215,7 +308,7 @@ static void SystemClock_Config(void)
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
   while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
-  
+
   /* Enable HSE Oscillator and activate PLL with HSE as source */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
@@ -238,18 +331,18 @@ static void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  
-/* Select PLL as system clock source and configure  bus clocks dividers */
+
+  /* Select PLL as system clock source and configure  bus clocks dividers */
   RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_D1PCLK1 | RCC_CLOCKTYPE_PCLK1 | \
-                                 RCC_CLOCKTYPE_PCLK2  | RCC_CLOCKTYPE_D3PCLK1);
+      RCC_CLOCKTYPE_PCLK2  | RCC_CLOCKTYPE_D3PCLK1);
 
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
-  RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;  
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2; 
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2; 
-  RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2; 
+  RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
+  RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
   ret = HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4);
   if(ret != HAL_OK)
   {
@@ -258,38 +351,40 @@ static void SystemClock_Config(void)
 
 }
 /**
-  * @brief  TxRx Transfer completed callback.
-  * @param  hspi: SPI handle
-  * @note   This example shows a simple way to report end of DMA TxRx transfer, and 
-  *         you can add your own implementation. 
-  * @retval None
-  */
+ * @brief  TxRx Transfer completed callback.
+ * @param  hspi: SPI handle
+ * @note   This example shows a simple way to report end of DMA TxRx transfer, and
+ *         you can add your own implementation.
+ * @retval None
+ */
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
   /* Turn LED1 on: Transfer in transmission process is complete */
   BSP_LED_On(LED1);
   /* Turn LED2 on: Transfer in reception process is complete */
   BSP_LED_On(LED2);
+  HAL_GPIO_WritePin(chipSelectPort, chipSelectPin, GPIO_PIN_SET);
   wTransferState = TRANSFER_COMPLETE;
 }
 
 /**
-  * @brief  SPI error callbacks.
-  * @param  hspi: SPI handle
-  * @note   This example shows a simple way to report transfer error, and you can
-  *         add your own implementation.
-  * @retval None
-  */
+ * @brief  SPI error callbacks.
+ * @param  hspi: SPI handle
+ * @note   This example shows a simple way to report transfer error, and you can
+ *         add your own implementation.
+ * @retval None
+ */
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 {
   wTransferState = TRANSFER_ERROR;
+  HAL_GPIO_WritePin(chipSelectPort, chipSelectPin, GPIO_PIN_SET);
 }
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @param  None
-  * @retval None
-  */
+ * @brief  This function is executed in case of error occurrence.
+ * @param  None
+ * @retval None
+ */
 static void Error_Handler(void)
 {
   BSP_LED_Off(LED1);
@@ -300,38 +395,16 @@ static void Error_Handler(void)
   }
 }
 
-/**
-  * @brief  Compares two buffers.
-  * @param  pBuffer1, pBuffer2: buffers to be compared.
-  * @param  BufferLength: buffer's length
-  * @retval 0  : pBuffer1 identical to pBuffer2
-  *         >0 : pBuffer1 differs from pBuffer2
-  */
-static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength)
-{
-  while (BufferLength--)
-  {
-    if((*pBuffer1) != *pBuffer2)
-    {
-      return BufferLength;
-    }
-    pBuffer1++;
-    pBuffer2++;
-  }
-
-  return 0;
-}
-
 #ifdef  USE_FULL_ASSERT
 /**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
+ * @brief  Reports the name of the source file and the source line number
+ *         where the assert_param error has occurred.
+ * @param  file: pointer to the source file name
+ * @param  line: assert_param error line source number
+ * @retval None
+ */
 void assert_failed(uint8_t* file, uint32_t line)
-{ 
+{
   /* User can add his own implementation to report the file name and line number,
      ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
 
@@ -343,10 +416,10 @@ void assert_failed(uint8_t* file, uint32_t line)
 #endif
 
 /**
-  * @brief  CPU L1-Cache enable.
-  * @param  None
-  * @retval None
-  */
+ * @brief  CPU L1-Cache enable.
+ * @param  None
+ * @retval None
+ */
 static void CPU_CACHE_Enable(void)
 {
   /* Enable I-Cache */
@@ -357,11 +430,11 @@ static void CPU_CACHE_Enable(void)
 }
 
 /**
-  * @}
-  */
+ * @}
+ */
 
 /**
-  * @}
-  */
+ * @}
+ */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

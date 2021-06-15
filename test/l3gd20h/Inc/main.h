@@ -67,7 +67,7 @@
 #define SPIx_IRQHandler                  SPI1_IRQHandler
 
 /* Size of buffer */
-#define BUFFERSIZE                       (COUNTOF(aTxBuffer) - 1)
+//#define BUFFERSIZE                       (COUNTOF(aRxBuffer) - 1)
 
 /* Exported macro ------------------------------------------------------------*/
 #define COUNTOF(__BUFFER__)   (sizeof(__BUFFER__) / sizeof(*(__BUFFER__)))

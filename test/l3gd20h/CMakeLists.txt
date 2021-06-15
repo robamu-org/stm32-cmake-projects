@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 set(TARGET_NAME stm32-l3gd20h)
 set(REPO_ROOT "../../")
+set(CMAKE_SCRIPT_PATH ${REPO_ROOT}/cmake)
 set(CMAKE_TOOLCHAIN_FILE ${REPO_ROOT}/stm32-cmake/cmake/stm32_gcc.cmake)
 
 set(STM32_CUBE_H7_PATH ${REPO_ROOT}/STM32CubeH7)
@@ -11,7 +12,7 @@ set(FREERTOS_PATH ${REPO_ROOT}/FreeRTOS-Kernel)
 project(stm32-l3gd20h C ASM)
 
 find_package(CMSIS COMPONENTS STM32H743ZI STM32H7_M7 REQUIRED)
-find_package(HAL COMPONENTS STM32H7M7 STM32H743ZI RCC GPIO CORTEX SPI DMA PWR REQUIRED)
+find_package(HAL COMPONENTS STM32H7M7 STM32H743ZI RCC GPIO CORTEX SPI DMA PWR EXTI REQUIRED)
 
 add_executable(${TARGET_NAME})
 
@@ -22,6 +23,7 @@ target_sources(${TARGET_NAME} PRIVATE
     stm32h7xx_hal_msp.c
     stm32h7xx_it.c
     stm32h7xx_nucleo.c
+    # system_stm32h7xx.c
 )
 
 target_link_libraries(${TARGET_NAME}
@@ -33,5 +35,9 @@ target_link_libraries(${TARGET_NAME}
     HAL::STM32::H7::M7::DMA
     HAL::STM32::H7::M7::PWR
     HAL::STM32::H7::M7::PWREx
+    HAL::STM32::H7::M7::EXTI
     STM32::NoSys
 )
+
+include (${CMAKE_SCRIPT_PATH}/BuildType.cmake)
+set_build_type()
