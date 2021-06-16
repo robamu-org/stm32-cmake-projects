@@ -9,6 +9,8 @@ set(STM32_TOOLCHAIN_PATH $ENV{STM32_TOOLCHAIN_PATH})
 set(TARGET_TRIPLET "arm-none-eabi")
 set(FREERTOS_PATH ${REPO_ROOT}/FreeRTOS-Kernel)
 
+configure_file(Inc/conf.h.in conf.h)
+
 project(stm32-l3gd20h C ASM)
 
 find_package(CMSIS COMPONENTS STM32H743ZI STM32H7_M7 REQUIRED)
@@ -23,11 +25,10 @@ target_sources(${TARGET_NAME} PRIVATE
     stm32h7xx_hal_msp.c
     stm32h7xx_it.c
     stm32h7xx_nucleo.c
-    # system_stm32h7xx.c
 )
 
 target_link_libraries(${TARGET_NAME}
-    CMSIS::STM32::H743ZI::M7
+    CMSIS::STM32::H743xx::M7
     HAL::STM32::H7::M7::RCC
     HAL::STM32::H7::M7::GPIO
     HAL::STM32::H7::M7::SPI
@@ -39,5 +40,10 @@ target_link_libraries(${TARGET_NAME}
     STM32::NoSys
 )
 
+target_include_directories(${TARGET_NAME} PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}
+)
+
 include (${CMAKE_SCRIPT_PATH}/BuildType.cmake)
 set_build_type()
+stm32_add_linker_script(${TARGET_NAME} "PRIVATE" STM32H743ZITx_FLASH.ld)

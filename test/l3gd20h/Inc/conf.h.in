@@ -1,0 +1,10 @@
+#ifndef TEST_L3GD20H_INC_CONF_H_
+#define TEST_L3GD20H_INC_CONF_H_
+
+#define NUCLEO_H743_TYPE_1 H743ZI
+#define NUCLEO_H743_TYPE_2 H743ZI2
+
+// Select board type here
+#define NUCLEO_CONF_SELECT NUCLEO_H743_TYPE_2
+
+#endif /* TEST_L3GD20H_INC_CONF_H_ */

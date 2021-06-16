@@ -27,6 +27,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32h7xx_hal.h"
+#include "conf.h"
 
 /** @addtogroup BSP
   * @{
@@ -45,7 +46,14 @@
   */
 /* Nucleo pin and part number defines */
 #define USE_NUCLEO_144
+// Defined in conf.h instead
+#if NUCLEO_CONF_SELECT == NUCLEO_H743_TYPE_1
+#define USE_NUCLEO_H743ZI
+#else
 #define USE_NUCLEO_H743ZI2
+#endif
+
+
 
 /* COM define */
 #define USE_COM_LOG                         0U
