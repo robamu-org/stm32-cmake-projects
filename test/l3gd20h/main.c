@@ -161,7 +161,7 @@ int main(void)
   HAL_GPIO_WritePin(chipSelectPort, chipSelectPin, GPIO_PIN_SET);
 
   // Transfer buffer cache maintenance
-  // Without this, the transfer won't work if the TX buffer is not in a special MPU section
+  // It works without it here..
 //  SCB_CleanDCache_by_Addr((uint32_t*)(((uint32_t)txBuf) & ~(uint32_t)0x1F),
 //          sizeof(txBuf) + 32);
   txBuf[0] = WHO_AM_I_REG | STM_READ_MASK;
