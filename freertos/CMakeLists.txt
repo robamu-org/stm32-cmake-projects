@@ -54,6 +54,9 @@ target_link_libraries(stm32-freertos PRIVATE
     HAL::STM32::H7::M7::CORTEX
     CMSIS::STM32::H743ZI::M7
     STM32::NoSys
+    STM32::Nano
+    STM32::Nano::FloatPrint
+    STM32::Nano::FloatScan
 )
 
 if(USE_CMSIS_RTOS)
