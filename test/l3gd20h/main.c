@@ -22,6 +22,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include <stdint.h>
 
 /** @addtogroup STM32H7xx_HAL_Examples
  * @{
@@ -159,7 +160,10 @@ int main(void)
   HAL_GPIO_Init(chipSelectPort, &chipSelect);
   HAL_GPIO_WritePin(chipSelectPort, chipSelectPin, GPIO_PIN_SET);
 
-
+  // Transfer buffer cache maintenance
+  // It works without it here..
+//  SCB_CleanDCache_by_Addr((uint32_t*)(((uint32_t)txBuf) & ~(uint32_t)0x1F),
+//          sizeof(txBuf) + 32);
   txBuf[0] = WHO_AM_I_REG | STM_READ_MASK;
   txBuf[1] = 0;
 
@@ -190,9 +194,16 @@ int main(void)
   {
   case TRANSFER_COMPLETE :
     /*##-4- Compare the sent and received buffers ##############################*/
-    if(aRxBuffer[1] != EXPECTED_WHO_AM_I_VAL) {
+    if(aRxBuffer[1] == EXPECTED_WHO_AM_I_VAL) {
       // Successfully read
+      BSP_LED_On(LED1);
+      BSP_LED_On(LED2);
       BSP_LED_On(LED3);
+    }
+    else {
+      BSP_LED_Off(LED1);
+      BSP_LED_Off(LED2);
+      BSP_LED_Off(LED3);
     }
     break;
   default :
