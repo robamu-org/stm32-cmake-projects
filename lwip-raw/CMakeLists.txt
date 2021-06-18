@@ -27,10 +27,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 # include(${STM32_CMAKE_PATH}/cmake/stm32/devices.cmake)
 # stm32_print_devices_by_family(FAMILY H7)
 
-find_package(CMSIS COMPONENTS STM32H743ZI STM32H7_M7 REQUIRED)
-if(USE_CMSIS_RTOS)
-    find_package(CMSIS COMPONENTS RTOS REQUIRED)
-endif()
+find_package(CMSIS COMPONENTS STM32H743ZI STM32H7_M7 RTOS REQUIRED)
 find_package(HAL COMPONENTS STM32H7M7 STM32H743ZI RCC GPIO CORTEX REQUIRED)
 find_package(FreeRTOS COMPONENTS ARM_CM7 REQUIRED)
 find_package(LwIP REQUIRED)
@@ -56,18 +53,11 @@ target_link_libraries(${TARGET_NAME} PRIVATE
     CMSIS::STM32::H743ZI::M7
     LwIP
     LwIP::IPv4
-    LwIP::IPv6
     STM32::NoSys
     STM32::Nano
     STM32::Nano::FloatPrint
     STM32::Nano::FloatScan
 )
-
-if(USE_CMSIS_RTOS)
-    target_link_libraries(${TARGET_NAME} PRIVATE
-        CMSIS::STM32::H7::M7::RTOS
-    )
-endif()
 
 stm32_print_size_of_target(${TARGET_NAME})
 
