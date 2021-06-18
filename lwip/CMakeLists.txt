@@ -33,7 +33,7 @@ if(USE_CMSIS_RTOS)
 endif()
 find_package(HAL COMPONENTS STM32H7M7 STM32H743ZI RCC GPIO CORTEX REQUIRED)
 find_package(FreeRTOS COMPONENTS ARM_CM7 REQUIRED)
-find_package(LwIP COMPONENTS IPv4 REQUIRED)
+find_package(LwIP REQUIRED)
 
 add_executable(${TARGET_NAME})
 
@@ -55,6 +55,8 @@ target_link_libraries(${TARGET_NAME} PRIVATE
     HAL::STM32::H7::M7::CORTEX
     CMSIS::STM32::H743ZI::M7
     LwIP
+    LwIP::IPv4
+    LwIP::IPv6
     STM32::NoSys
     STM32::Nano
     STM32::Nano::FloatPrint
