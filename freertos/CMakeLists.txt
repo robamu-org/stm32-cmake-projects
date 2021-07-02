@@ -5,18 +5,17 @@ set(STM32_CMAKE_PATH  ${REPO_ROOT}/stm32-cmake)
 
 # Please note: When using CMSIS, it is recommended to use the FreeRTOS version supplied in the 
 # Cube repository because more recent kernels might be incompatible
-option(USE_CMSIS_RTOS ON "Use CMSIS RTOS provided by Cube repository")
-option(USE_CUBE_RTOS ON "Use FreeRTOS provided by Cube repository")
+option(USE_CMSIS_RTOS "Use CMSIS RTOS provided by Cube repository" ON)
+option(USE_CUBE_RTOS "Use FreeRTOS provided by Cube repository" ON)
 
 set(STM32_CUBE_H7_PATH ${REPO_ROOT}/STM32CubeH7)
 set(STM32_TOOLCHAIN_PATH $ENV{STM32_TOOLCHAIN_PATH})
 set(TARGET_TRIPLET "arm-none-eabi")
 
-
 if(USE_CUBE_RTOS)
-    set(FREERTOS_PATH ${REPO_ROOT}/FreeRTOS-Kernel)
-else()
     set(FREERTOS_PATH ${STM32_CUBE_H7_PATH}/Middlewares/Third_Party/FreeRTOS)
+else()
+    set(FREERTOS_PATH ${REPO_ROOT}/FreeRTOS-Kernel)
 endif()
 
 # This must come before the project call!
@@ -66,10 +65,5 @@ if(USE_CMSIS_RTOS)
 endif()
 
 stm32_print_size_of_target(${TARGET_NAME})
+stm32_generate_binary_file(${TARGET_NAME})
 
-add_custom_command(
-	TARGET ${TARGET_NAME}
-	POST_BUILD
-	COMMAND echo Generating binary file ${CMAKE_PROJECT_NAME}.bin..
-	COMMAND ${CMAKE_OBJCOPY} -O binary ${TARGET_NAME}.elf ${TARGET_NAME}.bin
-)

@@ -5,8 +5,8 @@ set(STM32_CMAKE_PATH  ${REPO_ROOT}/stm32-cmake)
 
 # Please note: When using CMSIS, it is recommended to use the FreeRTOS version supplied in the 
 # Cube repository because more recent kernels might be incompatible
-option(USE_CMSIS_RTOS ON "Use CMSIS RTOS provided by Cube repository")
-option(USE_CUBE_RTOS ON "Use FreeRTOS provided by Cube repository")
+option(USE_CMSIS_RTOS "Use CMSIS RTOS provided by Cube repository" ON)
+option(USE_CUBE_RTOS "Use FreeRTOS provided by Cube repository" ON)
 
 set(STM32_CUBE_H7_PATH ${REPO_ROOT}/STM32CubeH7)
 set(STM32_TOOLCHAIN_PATH $ENV{STM32_TOOLCHAIN_PATH})
