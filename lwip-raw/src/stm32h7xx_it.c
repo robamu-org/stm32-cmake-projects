@@ -35,9 +35,10 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32h7xx_it.h"
+#include "stm32h7xx_hal.h"
+#include "stm32h7xx_nucleo.h"
 
 #include "cmsis_os.h"
-#include "main.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/

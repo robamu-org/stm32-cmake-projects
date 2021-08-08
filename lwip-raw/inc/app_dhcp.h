@@ -22,8 +22,8 @@ extern "C" {
 uint8_t get_dhcp_state();
 void set_dhcp_state(uint8_t new_state);
 
-void DHCP_Process(struct netif *netif);
-void DHCP_Periodic_Handle(struct netif *netif);
+void dhcp_process(struct netif *netif);
+void dhcp_periodic_handle(struct netif *netif);
 
 #endif /* LWIP_DHCP == 1 */
 

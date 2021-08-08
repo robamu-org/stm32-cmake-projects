@@ -22,6 +22,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "hardware_init.h"
+#include "lwip_raw_conf.h"
 #include "lwip/opt.h"
 #include "lwip/init.h"
 #include "netif/etharp.h"
@@ -31,7 +32,6 @@
 #include "lwip/dhcp.h"
 #endif
 #include "ethernetif.h"
-#include "main.h"
 #include "app_ethernet.h"
 #include "app_dhcp.h"
 #include "udp_echoserver.h"
@@ -50,10 +50,10 @@
   */
 int main(void)
 {
-  printf("-- STM32H743ZI LwIP Raw Demo application --\n");
-
   /* Hardware initialization */
   performHardwareInit();
+
+  printf("-- STM32H743ZI LwIP Raw Demo application --\n");
 
   /* Initialize the LwIP stack */
   lwip_init();
@@ -79,7 +79,7 @@ int main(void)
 #endif
 
 #if LWIP_DHCP
-    DHCP_Periodic_Handle(&gnetif);
+    dhcp_periodic_handle(&gnetif);
 #endif
   }
 }

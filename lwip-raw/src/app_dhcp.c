@@ -1,6 +1,6 @@
+#include "lwip_raw_conf.h"
 #include "app_dhcp.h"
 #include "app_ethernet.h"
-#include "udp_config.h"
 #include "ethernetif.h"
 
 #include "lwip/dhcp.h"
@@ -27,7 +27,7 @@ void handle_dhcp_down(struct netif* netif);
  * @param  None
  * @retval None
  */
-void DHCP_Process(struct netif *netif)
+void dhcp_process(struct netif *netif)
 {
     struct dhcp* dhcp = NULL;
     switch (DHCP_state) {
@@ -72,12 +72,11 @@ void handle_dhcp_timeout(struct netif* netif) {
     ETH_HandleTypeDef* handle = getEthernetHandle();
     handle->gState = HAL_ETH_STATE_READY;
 
-#if OBSW_ETHERNET_TMTC_COMMANDING == 1
-#if OBSW_ETHERNET_USE_LED1_LED2 == 1
+#if STM32_LWIP_USE_LEDS == 1
     BSP_LED_On(LED1);
     BSP_LED_Off(LED2);
 #endif
-#endif
+
 }
 
 /**
@@ -85,23 +84,21 @@ void handle_dhcp_timeout(struct netif* netif) {
  * @param  netif
  * @retval None
  */
-void DHCP_Periodic_Handle(struct netif *netif)
+void dhcp_periodic_handle(struct netif *netif)
 {
     /* Fine DHCP periodic process every 500ms */
     if (HAL_GetTick() - DHCPfineTimer >= DHCP_FINE_TIMER_MSECS) {
         DHCPfineTimer =  HAL_GetTick();
         /* process DHCP state machine */
-        DHCP_Process(netif);
+        dhcp_process(netif);
     }
 }
 
 void handle_dhcp_start(struct netif* netif) {
     printf("handle_dhcp_start: Looking for DHCP server ...\n\r");
-#if OBSW_ETHERNET_TMTC_COMMANDING == 1
-#if OBSW_ETHERNET_USE_LED1_LED2 == 1
+#if STM32_LWIP_USE_LEDS == 1
     BSP_LED_Off(LED1);
     BSP_LED_Off(LED2);
-#endif
 #endif
     ip_addr_set_zero_ip4(&netif->ip_addr);
     ip_addr_set_zero_ip4(&netif->netmask);

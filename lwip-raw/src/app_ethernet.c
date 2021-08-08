@@ -1,7 +1,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "app_ethernet.h"
 #include "ethernetif.h"
-#include "udp_config.h"
+#include "lwip_raw_conf.h"
 
 #if LWIP_DHCP
 #include "app_dhcp.h"

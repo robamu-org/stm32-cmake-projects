@@ -3,6 +3,8 @@
  * Implements some base-level for libc for heap management and printing on
  * the debug port.
  */
+#include "lwip_raw_conf.h"
+#include "hardware_init.h"
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -13,9 +15,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stdio.h>
-
-#include <hardware_init.h>
-
 
 #define AUTO_RETURN_AFTER_NEWLINE	1
 
@@ -53,12 +52,12 @@ int _write(int file, const void *ptr, size_t len) {
 			if(((const char *) ptr)[i] == '\n' &&
 					((const char *) ptr)[i+1] != '\r') {
 				HAL_UART_Transmit(&huart3, (uint8_t*)"\r", 1 ,
-						10);
+						STM32_LWIP_UART_TIMEOUT);
 			}
 #endif
 			uint8_t* character = (uint8_t*) ptr;
 			HAL_UART_Transmit(&huart3, (uint8_t*) (character + i),
-					1 , 10);
+					1 , STM32_LWIP_UART_TIMEOUT);
 		}
 		return len;
 	} else {

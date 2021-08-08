@@ -18,17 +18,14 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "lwip_raw_conf.h"
+
 #include "lwip/pbuf.h"
 #include "lwip/udp.h"
 #include "lwip/tcp.h"
 #include <string.h>
 #include <stdio.h>
 #include "udp_echoserver.h"
-
-#ifndef STM32_UDP_WIRETAPPING
-#define STM32_UDP_WIRETAPPING
-#endif
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -91,6 +88,11 @@ void udp_echoserver_receive_callback(void *arg, struct udp_pcb *upcb,
   if(p_tx != NULL)
   {
     pbuf_take(p_tx, (char*)p->payload, p->len);
+
+#if STM32_LWIP_UDP_WIRETAPPING == 1
+    printf("UDP Server received: %s\n", (char*) p->payload);
+#endif
+
     /* Connect to the remote client */
     udp_connect(upcb, addr, port);
     

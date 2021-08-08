@@ -5,6 +5,11 @@
 extern "C" {
 #endif
 
+#cmakedefine01 STM32_LWIP_USE_LEDS
+#cmakedefine01 STM32_LWIP_UDP_WIRETAPPING
+
+#define STM32_LWIP_UART_TIMEOUT 10
+
 /* UDP local connection port. Client needs to bind to this port */
 #define UDP_SERVER_PORT    7
 

@@ -54,10 +54,6 @@
 #include <lwip/timeouts.h>
 #include <netif/etharp.h>
 
-#ifdef FSFW_OSAL_RTEMS
-#include <rtems.h>
-#endif
-
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Network interface name */

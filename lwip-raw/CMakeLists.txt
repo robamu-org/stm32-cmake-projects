@@ -4,6 +4,9 @@ set(REPO_ROOT "..")
 set(CMAKE_SCRIPT_PATH ${REPO_ROOT}/cmake)
 set(STM32_CMAKE_PATH  ${REPO_ROOT}/stm32-cmake)
 
+option(STM32_LWIP_USE_LEDS "Use LEDs for LwIP DHCP" ON)
+option(STM32_LWIP_UDP_WIRETAPPING "Print received UDP packets to the console" ON)
+
 # Please note: When using CMSIS, it is recommended to use the FreeRTOS version supplied in the 
 # Cube repository because more recent kernels might be incompatible
 option(USE_CMSIS_RTOS "Use CMSIS RTOS provided by Cube repository" ON)
@@ -19,6 +22,8 @@ if(USE_CUBE_RTOS)
 else()
     set(FREERTOS_PATH ${REPO_ROOT}/FreeRTOS-Kernel)
 endif()
+
+configure_file("inc/lwip_raw_conf.h.in" lwip_raw_conf.h)
 
 # This must come before the project call!
 set(CMAKE_TOOLCHAIN_FILE ${STM32_CMAKE_PATH}/cmake/stm32_gcc.cmake)
