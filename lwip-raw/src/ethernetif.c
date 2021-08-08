@@ -6,26 +6,57 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics International N.V.
   * All rights reserved.</center></h2>
   *
-  * This software component is licensed by ST under Ultimate Liberty license
-  * SLA0044, the "License"; You may not use this file except in compliance with
-  * the License. You may obtain a copy of the License at:
-  *                             www.st.com/SLA0044
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted, provided that the following conditions are met:
+  *
+  * 1. Redistribution of source code must retain the above copyright notice,
+  *    this list of conditions and the following disclaimer.
+  * 2. Redistributions in binary form must reproduce the above copyright notice,
+  *    this list of conditions and the following disclaimer in the documentation
+  *    and/or other materials provided with the distribution.
+  * 3. Neither the name of STMicroelectronics nor the names of other
+  *    contributors to this software may be used to endorse or promote products
+  *    derived from this software without specific written permission.
+  * 4. This software, including modifications and/or derivative works of this
+  *    software, must execute solely and exclusively on microcontroller or
+  *    microprocessor devices manufactured by or for STMicroelectronics.
+  * 5. Redistribution and use of this software other than as permitted under
+  *    this license is void and will automatically terminate your rights under
+  *    this license.
+  *
+  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS"
+  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT
+  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+  * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
+  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT
+  * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
   ******************************************************************************
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32h7xx_hal.h"
-#include "lwip/opt.h"
-#include "lwip/timeouts.h"
-#include "lwip/netif.h"
-#include "netif/etharp.h"
 #include "ethernetif.h"
-#include "lan8742.h"
+
 #include <string.h>
+#include <lan8742.h>
+#include <stm32h7xx_hal.h>
+#include <lwip/netif.h>
+#include <lwip/opt.h>
+#include <lwip/timeouts.h>
+#include <netif/etharp.h>
+
+#ifdef FSFW_OSAL_RTEMS
+#include <rtems.h>
+#endif
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -33,16 +64,14 @@
 #define IFNAME0 's'
 #define IFNAME1 't'
 
-#define ETH_RX_BUFFER_SIZE                     (1536UL)
-
-#define ETH_DMA_TRANSMIT_TIMEOUT                (20U)
+#define DMA_DESCRIPTOR_ALIGNMENT 0x20
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* 
 @Note: This interface is implemented to operate in zero-copy mode only:
-        - Rx buffers are allocated statically and passed directly to the LwIP stack,
-          they will return back to ETH DMA after been processed by the stack.
+        - Rx buffers are allocated statically and passed directly to the LwIP stack
+          they will return back to DMA after been processed by the stack.
         - Tx Buffers will be allocated from LwIP stack memory heap, 
           then passed to ETH HAL driver.
 
@@ -55,8 +84,6 @@
   2.a. Rx Buffers number must be between ETH_RX_DESC_CNT and 2*ETH_RX_DESC_CNT
   2.b. Rx Buffers must have the same size: ETH_RX_BUFFER_SIZE, this value must
        passed to ETH DMA in the init field (EthHandle.Init.RxBuffLen)
-  2.c  The RX Ruffers addresses and sizes must be properly defined to be aligned
-       to L1-CACHE line size (32 bytes).
 */
 
 #if defined ( __ICCARM__ ) /*!< IAR Compiler */
@@ -76,11 +103,18 @@ __attribute__((section(".RxArraySection"))) uint8_t Rx_Buff[ETH_RX_DESC_CNT][ETH
 
 #elif defined ( __GNUC__ ) /* GNU Compiler */ 
 
+/* Placement and alignment specified in linker script here */
 ETH_DMADescTypeDef DMARxDscrTab[ETH_RX_DESC_CNT] __attribute__((section(".RxDecripSection"))); /* Ethernet Rx DMA Descriptors */
 ETH_DMADescTypeDef DMATxDscrTab[ETH_TX_DESC_CNT] __attribute__((section(".TxDecripSection")));   /* Ethernet Tx DMA Descriptors */
 uint8_t Rx_Buff[ETH_RX_DESC_CNT][ETH_RX_BUFFER_SIZE] __attribute__((section(".RxArraySection"))); /* Ethernet Receive Buffers */
 
-#endif
+#endif /* defined ( __GNUC__ ) */
+
+/* Global boolean to track ethernet connection */
+bool ethernet_cable_connected;
+
+struct pbuf_custom rx_pbuf[ETH_RX_DESC_CNT];
+uint32_t current_pbuf_idx =0;
 
 ETH_HandleTypeDef EthHandle;
 ETH_TxPacketConfig TxConfig; 
@@ -103,9 +137,6 @@ lan8742_IOCtx_t  LAN8742_IOCtx = {ETH_PHY_IO_Init,
                                ETH_PHY_IO_WriteReg,
                                ETH_PHY_IO_ReadReg,
                                ETH_PHY_IO_GetTick};
-
-LWIP_MEMPOOL_DECLARE(RX_POOL, 10, sizeof(struct pbuf_custom), "Zero-copy RX PBUF pool");
-
 /* Private functions ---------------------------------------------------------*/
 /*******************************************************************************
                        LL Driver Interface ( LwIP stack --> ETH) 
@@ -131,17 +162,17 @@ static void low_level_init(struct netif *netif)
   
   /* configure ethernet peripheral (GPIOs, clocks, MAC, DMA) */
   HAL_ETH_Init(&EthHandle);
-  
+
   /* set MAC hardware address length */
-  netif->hwaddr_len = ETH_HWADDR_LEN;
+  netif->hwaddr_len = ETHARP_HWADDR_LEN;
   
   /* set MAC hardware address */
-  netif->hwaddr[0] =  ETH_MAC_ADDR0;
-  netif->hwaddr[1] =  ETH_MAC_ADDR1;
-  netif->hwaddr[2] =  ETH_MAC_ADDR2;
-  netif->hwaddr[3] =  ETH_MAC_ADDR3;
-  netif->hwaddr[4] =  ETH_MAC_ADDR4;
-  netif->hwaddr[5] =  ETH_MAC_ADDR5;
+  netif->hwaddr[0] =  0x02;
+  netif->hwaddr[1] =  0x00;
+  netif->hwaddr[2] =  0x00;
+  netif->hwaddr[3] =  0x00;
+  netif->hwaddr[4] =  0x00;
+  netif->hwaddr[5] =  0x00;
   
   /* maximum transfer unit */
   netif->mtu = ETH_MAX_PAYLOAD;
@@ -153,24 +184,25 @@ static void low_level_init(struct netif *netif)
   for(idx = 0; idx < ETH_RX_DESC_CNT; idx ++)
   {
     HAL_ETH_DescAssignMemory(&EthHandle, idx, Rx_Buff[idx], NULL);
+    
+    /* Set Custom pbuf free function */
+    rx_pbuf[idx].custom_free_function = pbuf_free_custom;
   }
-  
-  /* Initialize the RX POOL */
-  LWIP_MEMPOOL_INIT(RX_POOL);
   
   /* Set Tx packet config common parameters */
   memset(&TxConfig, 0 , sizeof(ETH_TxPacketConfig));
   TxConfig.Attributes = ETH_TX_PACKETS_FEATURES_CSUM | ETH_TX_PACKETS_FEATURES_CRCPAD;
   TxConfig.ChecksumCtrl = ETH_CHECKSUM_IPHDR_PAYLOAD_INSERT_PHDR_CALC;
   TxConfig.CRCPadCtrl = ETH_CRC_PAD_INSERT;
-  
+
   /* Set PHY IO functions */
   LAN8742_RegisterBusIO(&LAN8742, &LAN8742_IOCtx);
-  
+
   /* Initialize the LAN8742 ETH PHY */
   LAN8742_Init(&LAN8742);
-  
+
   ethernet_link_check_state(netif);
+
 }
 
 /**
@@ -185,17 +217,15 @@ static void low_level_init(struct netif *netif)
   *
   * @note Returning ERR_MEM here if a DMA queue of your MAC is full can lead to
   *       strange results. You might consider waiting for space in the DMA queue
-  *       to become available since the stack doesn't retry to send a packet
+  *       to become availale since the stack doesn't retry to send a packet
   *       dropped because of memory failure (except for the TCP timers).
   */
 static err_t low_level_output(struct netif *netif, struct pbuf *p)
 {
-  uint32_t i=0;
+  uint32_t i=0, framelen = 0;
   struct pbuf *q;
   err_t errval = ERR_OK;
   ETH_BufferTypeDef Txbuffer[ETH_TX_DESC_CNT];
-  
-  memset(Txbuffer, 0 , ETH_TX_DESC_CNT*sizeof(ETH_BufferTypeDef));
   
   for(q = p; q != NULL; q = q->next)
   {
@@ -204,7 +234,8 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
     
     Txbuffer[i].buffer = q->payload;
     Txbuffer[i].len = q->len;
-
+    framelen += q->len;
+    
     if(i>0)
     {
       Txbuffer[i-1].next = &Txbuffer[i];
@@ -218,10 +249,14 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
     i++;
   }
 
-  TxConfig.Length = p->tot_len;
+  TxConfig.Length = framelen;
   TxConfig.TxBuffer = Txbuffer;
 
-  HAL_ETH_Transmit(&EthHandle, &TxConfig, ETH_DMA_TRANSMIT_TIMEOUT);
+  HAL_StatusTypeDef ret = HAL_ETH_Transmit(&EthHandle, &TxConfig, 20);
+
+  if(ret != HAL_OK) {
+	  printf("low_level_output: Could not transmit ethernet packet, code %d!\n\r", ret);
+  }
   
   return errval;
 }
@@ -237,35 +272,27 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
 static struct pbuf * low_level_input(struct netif *netif)
 {
   struct pbuf *p = NULL;
-  ETH_BufferTypeDef RxBuff[ETH_RX_DESC_CNT];
-  uint32_t framelength = 0, i = 0;;
-  struct pbuf_custom* custom_pbuf;
+  ETH_BufferTypeDef RxBuff;
+  uint32_t framelength = 0;
 
-  memset(RxBuff, 0 , ETH_RX_DESC_CNT*sizeof(ETH_BufferTypeDef));
-
-  for(i = 0; i < ETH_RX_DESC_CNT -1; i++)
-  {
-    RxBuff[i].next=&RxBuff[i+1];
-  }
-  
   if (HAL_ETH_IsRxDataAvailable(&EthHandle))
   {
-    HAL_ETH_GetRxDataBuffer(&EthHandle, RxBuff);
+    HAL_ETH_GetRxDataBuffer(&EthHandle, &RxBuff);
     HAL_ETH_GetRxDataLength(&EthHandle, &framelength);
     
-    /* Build Rx descriptor to be ready for next data reception */
-	HAL_ETH_BuildRxDescriptors(&EthHandle);
-
     /* Invalidate data cache for ETH Rx Buffers */
-    SCB_InvalidateDCache_by_Addr((uint32_t *)RxBuff->buffer, framelength);
+    SCB_InvalidateDCache_by_Addr((uint32_t *)Rx_Buff, (ETH_RX_DESC_CNT*ETH_RX_BUFFER_SIZE));
     
-    custom_pbuf  = (struct pbuf_custom*)LWIP_MEMPOOL_ALLOC(RX_POOL);
-    if(custom_pbuf != NULL)
+    p = pbuf_alloced_custom(PBUF_RAW, framelength, PBUF_POOL, &rx_pbuf[current_pbuf_idx], RxBuff.buffer, ETH_RX_BUFFER_SIZE);
+    if(current_pbuf_idx < (ETH_RX_DESC_CNT -1))
     {
-      custom_pbuf->custom_free_function = pbuf_free_custom;
-      p = pbuf_alloced_custom(PBUF_RAW, framelength, PBUF_REF, custom_pbuf, RxBuff->buffer, framelength);
+      current_pbuf_idx++;
     }
-    
+    else
+    {
+      current_pbuf_idx = 0;
+    }
+
     return p;
   }
   else
@@ -290,19 +317,21 @@ void ethernetif_input(struct netif *netif)
   
   /* move received packet into a new pbuf */
   p = low_level_input(netif);
-    
+
   /* no packet could be read, silently ignore this */
   if (p == NULL) return;
-    
+
   /* entry point to the LwIP stack */
   err = netif->input(p, netif);
-    
+
   if (err != ERR_OK)
   {
     LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: IP input error\n"));
     pbuf_free(p);
     p = NULL;
   }
+
+  HAL_ETH_BuildRxDescriptors(&EthHandle);
 }
 
 /**
@@ -348,8 +377,14 @@ err_t ethernetif_init(struct netif *netif)
   */
 void pbuf_free_custom(struct pbuf *p)
 {
-  struct pbuf_custom* custom_pbuf = (struct pbuf_custom*)p;
-  LWIP_MEMPOOL_FREE(RX_POOL, custom_pbuf);
+  if(p != NULL)
+  {
+    p->flags = 0;
+    p->next = NULL;
+    p->len = p->tot_len = 0;
+    p->ref = 0;
+    p->payload = NULL;
+  }
 }
 
 /**
@@ -362,6 +397,7 @@ u32_t sys_now(void)
 {
   return HAL_GetTick();
 }
+
 /*******************************************************************************
                        Ethernet MSP Routines
 *******************************************************************************/
@@ -369,46 +405,58 @@ u32_t sys_now(void)
   * @brief  Initializes the ETH MSP.
   * @param  heth: ETH handle
   * @retval None
-  */
+*/
 void HAL_ETH_MspInit(ETH_HandleTypeDef *heth)
 {
   GPIO_InitTypeDef GPIO_InitStructure;
   
-  /* Ethernett MSP init: RMII Mode 
-  
-  RX_CLK  --------------> PA1  
-  TXD0    --------------> PB12  
-  TXD1    --------------> PB13  
-  RXD0    --------------> PC4
-  RXD1    --------------> PC5
-  TX_EN   --------------> PB11 
-  RX_DV   --------------> PA7
-  
-  MDC     --------------> PC1
-  MDIO    --------------> PA2
-  
-  */
+  /* Ethernett MSP init: RMII Mode */
   
   /* Enable GPIOs clocks */
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
-  
-  /* Configure PA1, PA2 , PA7 */
-  GPIO_InitStructure.Pin =  GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_7;
+
+/* Ethernet pins configuration ************************************************/
+  /*
+        RMII_REF_CLK ----------------------> PA1
+        RMII_MDIO -------------------------> PA2
+        RMII_MDC --------------------------> PC1
+        RMII_MII_CRS_DV -------------------> PA7
+        RMII_MII_RXD0 ---------------------> PC4
+        RMII_MII_RXD1 ---------------------> PC5
+        RMII_MII_RXER ---------------------> PG2
+        RMII_MII_TX_EN --------------------> PG11
+        RMII_MII_TXD0 ---------------------> PG13
+        RMII_MII_TXD1 ---------------------> PB13
+  */
+
+  /* Configure PA1, PA2 and PA7 */
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStructure.Pull = GPIO_NOPULL ; 
+  GPIO_InitStructure.Pull = GPIO_NOPULL; 
   GPIO_InitStructure.Alternate = GPIO_AF11_ETH;
+  GPIO_InitStructure.Pin = GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_7;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
   
-  /* Configure PG11, PG12 and PG13 */
-  GPIO_InitStructure.Pin = GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13;
-  HAL_GPIO_Init(GPIOG, &GPIO_InitStructure);
+  /* Configure PB13 */
+  GPIO_InitStructure.Pin = GPIO_PIN_13;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
   
   /* Configure PC1, PC4 and PC5 */
-  GPIO_InitStructure.Pin = GPIO_PIN_1 | GPIO_PIN_4 | GPIO_PIN_5; 
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);	
+  GPIO_InitStructure.Pin = GPIO_PIN_1 | GPIO_PIN_4 | GPIO_PIN_5;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+  /* Configure PG2, PG11, PG13 and PG14 */
+  GPIO_InitStructure.Pin =  GPIO_PIN_2 | GPIO_PIN_11 | GPIO_PIN_13;
+  HAL_GPIO_Init(GPIOG, &GPIO_InitStructure);	
+  
+#if NO_SYS == 0
+  /* Enable the Ethernet global Interrupt */
+  HAL_NVIC_SetPriority(ETH_IRQn, 0x7, 0);
+  HAL_NVIC_EnableIRQ(ETH_IRQn);
+#endif
   
   /* Enable Ethernet clocks */
   __HAL_RCC_ETH1MAC_CLK_ENABLE();
@@ -490,7 +538,7 @@ int32_t ETH_PHY_IO_GetTick(void)
 }
 
 /**
-  * @brief  
+  * @brief
   * @retval None
   */
 void ethernet_link_check_state(struct netif *netif)
@@ -500,7 +548,7 @@ void ethernet_link_check_state(struct netif *netif)
   uint32_t linkchanged = 0, speed = 0, duplex =0;
   
   PHYLinkState = LAN8742_GetLinkState(&LAN8742);
-  
+
   if(netif_is_link_up(netif) && (PHYLinkState <= LAN8742_STATUS_LINK_DOWN))
   {
     HAL_ETH_Stop(&EthHandle);
@@ -532,13 +580,13 @@ void ethernet_link_check_state(struct netif *netif)
       linkchanged = 1;
       break;
     default:
-      break;      
+      break;
     }
-    
+
     if(linkchanged)
     {
       /* Get MAC Config MAC */
-      HAL_ETH_GetMACConfig(&EthHandle, &MACConf); 
+      HAL_ETH_GetMACConfig(&EthHandle, &MACConf);
       MACConf.DuplexMode = duplex;
       MACConf.Speed = speed;
       HAL_ETH_SetMACConfig(&EthHandle, &MACConf);
@@ -547,6 +595,18 @@ void ethernet_link_check_state(struct netif *netif)
       netif_set_link_up(netif);
     }
   }
+}
+
+ETH_HandleTypeDef* getEthernetHandle() {
+	return &EthHandle;
+}
+
+void set_eth_cable_connected(bool status) {
+    ethernet_cable_connected = status;
+}
+
+bool get_eth_cable_connected() {
+    return ethernet_cable_connected;
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

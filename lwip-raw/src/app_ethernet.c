@@ -1,172 +1,95 @@
-/**
-  ******************************************************************************
-  * @file    LwIP/LwIP_UDP_Echo_Client/Src/app_ethernet.c
-  * @author  MCD Application Team
-  * @brief   Ethernet specefic module
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under Ultimate Liberty license
-  * SLA0044, the "License"; You may not use this file except in compliance with
-  * the License. You may obtain a copy of the License at:
-  *                             www.st.com/SLA0044
-  *
-  ******************************************************************************
-  */
-
 /* Includes ------------------------------------------------------------------*/
-#include "lwip/opt.h"
-#include "main.h"
-#if LWIP_DHCP
-#include "lwip/dhcp.h"
-#endif
 #include "app_ethernet.h"
 #include "ethernetif.h"
+#include "udp_config.h"
+
+#if LWIP_DHCP
+#include "app_dhcp.h"
+#endif
+
+#include <lwipopts.h>
+#include <lwip/netif.h>
+#include <stm32h7xx_nucleo.h>
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-
-uint32_t EthernetLinkTimer;
-
-#if LWIP_DHCP
-#define MAX_DHCP_TRIES  4
-uint32_t DHCPfineTimer = 0;
-uint8_t DHCP_state = DHCP_OFF;
-#endif
+uint32_t ethernetLinkTimer = 0;
 
 /* Private function prototypes -----------------------------------------------*/
+void handle_status_change(struct netif* netif, bool link_up);
+
+
 /* Private functions ---------------------------------------------------------*/
 /**
-  * @brief  Notify the User about the network interface config status
-  * @param  netif: the network interface
-  * @retval None
-  */
-void ethernet_link_status_updated(struct netif *netif)
+ * @brief  Notify the User about the network interface config status
+ * @param  netif: the network interface
+ * @retval None
+ */
+void ethernet_link_status_updated(struct netif *netif) 
 {
-  if (netif_is_link_up(netif))
-  {
+	if (netif_is_link_up(netif))
+	{
+		set_eth_cable_connected(true);
+		handle_status_change(netif, true);
+	}
+	else
+	{
+        set_eth_cable_connected(false);
+		handle_status_change(netif, false);
+	}
+}
+
+void set_lwip_addresses(ip_addr_t* ipaddr, ip_addr_t* netmask, ip_addr_t* gw) {
+	IP4_ADDR(ipaddr, IP_ADDR0, IP_ADDR1, IP_ADDR2, IP_ADDR3);
+	IP4_ADDR(netmask, NETMASK_ADDR0, NETMASK_ADDR1 ,
+			NETMASK_ADDR2, NETMASK_ADDR3);
+	IP4_ADDR(gw, GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
+}
+
+
+void handle_status_change(struct netif* netif, bool link_up) {
+	if(link_up) {
 #if LWIP_DHCP
-    /* Update DHCP state machine */
-    DHCP_state = DHCP_START;
-    BSP_LED_On(LED1);
-    BSP_LED_On(LED2);
+		/* Update DHCP state machine */
+		set_dhcp_state(DHCP_START);
+#else
+		uint8_t iptxt[20];
+		sprintf((char *)iptxt, "%s", ip4addr_ntoa(netif_ip4_addr(netif)));
+		printf("\rNetwork cable connected. Static IP address: %s | Port: %d\n\r", iptxt,
+		        UDP_SERVER_PORT);
+		BSP_LED_On(LED1);
+		BSP_LED_Off(LED2);
 #endif /* LWIP_DHCP */
-  }
-  else
-  {
+	}
+	else {
+		printf("Network cable disconnected\n\r");
 #if LWIP_DHCP
-    /* Update DHCP state machine */
-    DHCP_state = DHCP_LINK_DOWN;
-    BSP_LED_Off(LED1);
-    BSP_LED_On(LED2);
+		/* Update DHCP state machine */
+		set_dhcp_state(DHCP_LINK_DOWN);
+#else
+		BSP_LED_Off(LED1);
+		BSP_LED_On(LED2);
 #endif /* LWIP_DHCP */
-  }
+	}
 }
 
 #if LWIP_NETIF_LINK_CALLBACK
-/**
-  * @brief  Ethernet Link periodic check
-  * @param  netif
-  * @retval None
-  */
-void Ethernet_Link_Periodic_Handle(struct netif *netif)
-{
-  /* Ethernet Link every 100ms */
-  if (HAL_GetTick() - EthernetLinkTimer >= 100)
-  {
-    EthernetLinkTimer = HAL_GetTick();
-    ethernet_link_check_state(netif);
-  }
-}
-#endif
-
-#if LWIP_DHCP
-/**
-  * @brief  DHCP_Process_Handle
-  * @param  None
-  * @retval None
-  */
-void DHCP_Process(struct netif *netif)
-{
-  ip_addr_t ipaddr;
-  ip_addr_t netmask;
-  ip_addr_t gw;
-  struct dhcp *dhcp;
-
-  switch (DHCP_state)
-  {
-    case DHCP_START:
-    {
-      BSP_LED_Off(LED1);
-      BSP_LED_Off(LED2);
-      ip_addr_set_zero_ip4(&netif->ip_addr);
-      ip_addr_set_zero_ip4(&netif->netmask);
-      ip_addr_set_zero_ip4(&netif->gw);
-      dhcp_start(netif);
-      DHCP_state = DHCP_WAIT_ADDRESS;
-    }
-    break;
-
-  case DHCP_WAIT_ADDRESS:
-    {
-      if (dhcp_supplied_address(netif))
-      {
-        DHCP_state = DHCP_ADDRESS_ASSIGNED;
-        BSP_LED_On(LED1);
-        BSP_LED_Off(LED2);
-      }
-      else
-      {
-        dhcp = (struct dhcp *)netif_get_client_data(netif, LWIP_NETIF_CLIENT_DATA_INDEX_DHCP);
-
-        /* DHCP timeout */
-        if (dhcp->tries > MAX_DHCP_TRIES)
-        {
-          DHCP_state = DHCP_TIMEOUT;
-
-          /* Static address used */
-          IP_ADDR4(&ipaddr, IP_ADDR0 ,IP_ADDR1 , IP_ADDR2 , IP_ADDR3 );
-          IP_ADDR4(&netmask, NETMASK_ADDR0, NETMASK_ADDR1, NETMASK_ADDR2, NETMASK_ADDR3);
-          IP_ADDR4(&gw, GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
-          netif_set_addr(netif, &ipaddr, &netmask, &gw);
-
-          BSP_LED_On(LED1);
-          BSP_LED_Off(LED2);
-        }
-      }
-    }
-    break;
-  case DHCP_LINK_DOWN:
-    {
-      DHCP_state = DHCP_OFF;
-      BSP_LED_Off(LED1);
-      BSP_LED_On(LED2);
-    }
-    break;
-  default: break;
-  }
-}
 
 /**
-  * @brief  DHCP periodic check
-  * @param  netif
-  * @retval None
-  */
-void DHCP_Periodic_Handle(struct netif *netif)
+ * @brief  Ethernet Link periodic check
+ * @param  netif
+ * @retval None
+ */
+void ethernet_link_periodic_handle(struct netif *netif)
 {
-  /* Fine DHCP periodic process every 500ms */
-  if (HAL_GetTick() - DHCPfineTimer >= DHCP_FINE_TIMER_MSECS)
-  {
-    DHCPfineTimer =  HAL_GetTick();
-    /* process DHCP state machine */
-    DHCP_Process(netif);
-  }
+	/* Ethernet Link every 100ms */
+	if (HAL_GetTick() - ethernetLinkTimer >= 100)
+	{
+		ethernetLinkTimer = HAL_GetTick();
+		ethernet_link_check_state(netif);
+	}
 }
-#endif
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif /* LWIP_NETIF_LINK_CALLBACK */

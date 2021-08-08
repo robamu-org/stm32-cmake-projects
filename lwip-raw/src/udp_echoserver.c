@@ -26,12 +26,17 @@
 #include <stdio.h>
 #include "udp_echoserver.h"
 
+#ifndef STM32_UDP_WIRETAPPING
+#define STM32_UDP_WIRETAPPING
+#endif
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
-void udp_echoserver_receive_callback(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *addr, u16_t port);
+void udp_echoserver_receive_callback(void *arg, struct udp_pcb *upcb,
+    struct pbuf *p, const ip_addr_t *addr, u16_t port);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -75,7 +80,8 @@ void udp_echoserver_init(void)
   * @param port the remote port from which the packet was received
   * @retval None
   */
-void udp_echoserver_receive_callback(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *addr, u16_t port)
+void udp_echoserver_receive_callback(void *arg, struct udp_pcb *upcb,
+    struct pbuf *p, const ip_addr_t *addr, u16_t port)
 {
   struct pbuf *p_tx;
   
@@ -86,7 +92,7 @@ void udp_echoserver_receive_callback(void *arg, struct udp_pcb *upcb, struct pbu
   {
     pbuf_take(p_tx, (char*)p->payload, p->len);
     /* Connect to the remote client */
-    udp_connect(upcb, addr, UDP_CLIENT_PORT);
+    udp_connect(upcb, addr, port);
     
     /* Tell the client that we have accepted it */
     udp_send(upcb, p_tx);
