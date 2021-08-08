@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2019, STMicroelectronics, all right reserved. 
+ * Copyright (C) 2017, STMicroelectronics, all right reserved. 
  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
  * All rights reserved.
  *
@@ -58,7 +58,7 @@ a lot of data that needs to be copied, this should be set high. */
 #define MEM_SIZE                (10*1024)
 
 /* Relocate the LwIP RAM heap pointer */
-#define LWIP_RAM_HEAP_POINTER    (0x30004000)
+#define LWIP_RAM_HEAP_POINTER    (0x30044000)
 
 /* MEMP_NUM_PBUF: the number of memp struct pbufs. If the application
    sends a lot of data out of ROM (or other static memory), this
@@ -105,7 +105,7 @@ a lot of data that needs to be copied, this should be set high. */
 
 /* Controls if TCP should queue segments that arrive out of
    order. Define to 0 if your device is low on memory. */
-#define TCP_QUEUE_OOSEQ         1
+#define TCP_QUEUE_OOSEQ         0
 
 /* TCP Maximum segment size. */
 #define TCP_MSS                 (1500 - 40)	  /* TCP_MSS = (Ethernet MTU - IP header size - TCP header size) */
