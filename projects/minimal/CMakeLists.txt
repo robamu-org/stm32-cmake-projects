@@ -42,5 +42,7 @@ if(BUILD_F303VC)
     )
 endif()
 
+generate_generic_executable_file()
+
 include(${CMAKE_SCRIPTS_PATH}/BuildType.cmake)
 set_build_type()

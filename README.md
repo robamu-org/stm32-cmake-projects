@@ -51,23 +51,23 @@ cmake -D<BOARD_SELECT> ../minimal
 cmake --build . -j
 ```
 
-## H743ZI
-
-## FreeRTOS Project
+### FreeRTOS Project
 
 ```sh
-cd freertos
+cd projects
 mkdir build && cd build
-cmake ../freertos
+cmake -D<BOARD_SELECT> ../freertos
 cmake --build . -j
 ```
+
+## H743ZI
 
 ## LwIP UDP Echoserver Project
 
 ```sh
-cd lwip-raw-udp-echoserver
+cd projects
 mkdir build && cd build
-cmake ../lwip-raw-udp-echoserver
+cmake ../h743zi/lwip-raw-udp-echoserver
 cmake --build . -j
 ```
 

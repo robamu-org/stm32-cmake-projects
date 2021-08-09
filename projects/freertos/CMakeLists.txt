@@ -131,6 +131,7 @@ endif()
 
 stm32_print_size_of_target(${TARGET_NAME})
 stm32_generate_binary_file(${TARGET_NAME})
+generate_generic_executable_file()
 
 include(${CMAKE_SCRIPTS_PATH}/BuildType.cmake)
 set_build_type()
