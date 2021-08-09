@@ -2,12 +2,21 @@
 #include <task.h>
 #include <timers.h>
 
-#include <stm32h7xx_hal.h>
 
+#if defined STM32H7
+#include <stm32h7xx_hal.h>
 // STM32H743ZI green led - PD12
 #define LED_PORT                GPIOB
 #define LED_PIN                 GPIO_PIN_7
 #define LED_PORT_CLK_ENABLE     __HAL_RCC_GPIOB_CLK_ENABLE
+
+#elif defined STM32F3
+#include <stm32f3xx_hal.h>
+// STM32F3 Discovery board - Red LED
+#define LED_PIN                GPIO_PIN_9
+#define LED_PORT          GPIOE
+#define LED_PORT_CLK_ENABLE    __HAL_RCC_GPIOE_CLK_ENABLE
+#endif
 
 static void blinky(void *arg)
 {

@@ -41,3 +41,6 @@ if(BUILD_F303VC)
         CMSIS::STM32::F303VC
     )
 endif()
+
+include(${CMAKE_SCRIPTS_PATH}/BuildType.cmake)
+set_build_type()
