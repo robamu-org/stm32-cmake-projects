@@ -7,3 +7,9 @@
 [submodule "STM32CubeH7"]
 	path = STM32CubeH7
 	url = https://github.com/STMicroelectronics/STM32CubeH7.git
+[submodule "lwip"]
+	path = lwip
+	url = https://git.savannah.nongnu.org/git/lwip.git
+[submodule "STM32CubeF4"]
+	path = STM32CubeF4
+	url = https://github.com/STMicroelectronics/STM32CubeF4.git
