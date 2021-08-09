@@ -1,7 +1,12 @@
 cmake_minimum_required(VERSION 3.13)
 set(TARGET_NAME stm32-freertos)
-set(REPO_ROOT "../../..")
-set(STM32_CMAKE_PATH  ${REPO_ROOT}/stm32-cmake)
+
+set(REPO_ROOT "../..")
+set(CMAKE_TOOLCHAIN_FILE ${REPO_ROOT}/stm32-cmake/cmake/stm32_gcc.cmake)
+set(CMAKE_SCRIPTS_PATH ${REPO_ROOT}/cmake)
+
+include(${CMAKE_SCRIPTS_PATH}/CommonSTM.cmake)
+common_config()
 
 # Please note: When using CMSIS, it is recommended to use the FreeRTOS version supplied in the 
 # Cube repository because more recent kernels might be incompatible
@@ -15,27 +20,23 @@ if(USE_CMSIS_RTOS AND NOT USE_CUBE_RTOS)
     message(WARNING "Using CMSIS RTOS but not using Cube RTOS. Build might fail")
 endif()
 
-set(STM32_CUBE_H7_PATH ${REPO_ROOT}/STM32CubeH7)
-set(STM32_TOOLCHAIN_PATH $ENV{STM32_TOOLCHAIN_PATH})
-set(TARGET_TRIPLET "arm-none-eabi")
-
-if(USE_CUBE_RTOS)
-    set(FREERTOS_PATH ${STM32_CUBE_H7_PATH}/Middlewares/Third_Party/FreeRTOS)
-else()
+if(NOT USE_CUBE_RTOS)
     set(FREERTOS_PATH ${REPO_ROOT}/FreeRTOS-Kernel)
 endif()
 
-# This must come before the project call!
-set(CMAKE_TOOLCHAIN_FILE ${STM32_CMAKE_PATH}/cmake/stm32_gcc.cmake)
 project(${TARGET_NAME} CXX C ASM)
 set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 
 # stm32_print_devices_by_family(FAMILY H7)
 
-set(CMSIS_COMP_LIST STM32H743ZI STM32H7_M7)
-set(FREERTOS_COMP_LIST ARM_CM7)
+set(CMSIS_COMP_LIST "")
+set(HAL_COMP_LIST "")
+set(CMSIS_COMP_LIST )
+set(FREERTOS_COMP_LIST "")
 set(FREERTOS_NAMESPACE FreeRTOS)
 
+# ARM_CM7
+# STM32H743ZI STM32H7_M7
 if(USE_CMSIS_RTOS)
     list(APPEND CMSIS_COMP_LIST RTOS)
     list(APPEND FREERTOS_COMP_LIST STM32H7)

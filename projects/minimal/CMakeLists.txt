@@ -1,24 +1,13 @@
 cmake_minimum_required(VERSION 3.13)
-set(TARGET_NAME stm32-minimal)
+
 set(REPO_ROOT "../..")
-set(CMAKE_TOOLCHAIN_FILE ${REPO_ROOT}/stm32-cmake/cmake/stm32_gcc.cmake)
+set(CMAKE_SCRIPTS_PATH ${REPO_ROOT}/cmake)
 
-option(BUILD_H743ZI "Build for H743ZI board" OFF)
-option(BUILD_F303VC "Build for F303VC board" OFF)
-
-if(NOT BUILD_H743ZI AND NOT BUILD_F303VC)
-    message(
-        FATAL_ERROR "Please pick at least once board and supply it with -DBUILD_<BOARD>"
-    )
-endif()
-
-set(STM32_CUBE_H7_PATH ${REPO_ROOT}/STM32CubeH7)
-set(STM32_CUBE_F3_PATH ${REPO_ROOT}/STM32CubeF3)
-set(STM32_TOOLCHAIN_PATH $ENV{STM32_TOOLCHAIN_PATH})
-set(TARGET_TRIPLET "arm-none-eabi")
-set(FREERTOS_PATH ${REPO_ROOT}/FreeRTOS-Kernel)
+include(${CMAKE_SCRIPTS_PATH}/CommonSTM.cmake)
+common_config()
 
 project(stm32-minimal C ASM)
+set(TARGET_NAME ${CMAKE_PROJECT_NAME})
 
 set(CMSIS_COMP_LIST "")
 
