@@ -9,5 +9,5 @@
 .settings
 .cproject
 .project
-!eclipse/.cproject
-!eclipse/.project
+!eclipse/**/.cproject
+!eclipse/**/.project
