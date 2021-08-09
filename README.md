@@ -1,11 +1,7 @@
-STM32H743ZI-Nucleo Minimal CMake project
+STM32 CMake Projects
 ======
 
-This repository provides most components to cross-compile with `CMake` for the STM32 Nucleo-H743ZI
-board. It uses the `CMake` support provided by the `stm32-cmake` repository.
-
-The FreeRTOS kernel and the STM32H7Cube repository are integrated here as submodules.
-Run the following commands in git to clone the submodules:
+Personal test repository for STM32 projects using the `stm32-cmake` repository.
 
 ```sh
 git submodule init
@@ -34,24 +30,22 @@ pacman -S mingw-w64-x86_64-cmake mingw-w64-x86_64-make
 
 # Building the Minimal Project or the FreeRTOS project
 
-The project expect the cross-compiler path to be set in the `STM32_TOOLCHAIN_PATH` environmental
-variable. Assuming you use a Unix environment, you can set up the environmental path like this
-
-```sh
-export STM32_TOOLCHAIN_PATH=<pathToToolchainBinaries>
-```
+The project expect the folder containing the toolchain binaries to be in the environment
+path.
 
 On Windows, when using MinGW64, add `-G "MinGW Makefiles"` to use MinGW makefiles or `-G "Ninja`
 to use the Ninja build system.
 You can flash the generated binary file to the connect board via drag-and-drop
 or you can use Eclipse and OpenOCD to perform debugging with the `.elf` file.
 
-## Minimal Project
+## H743ZI
+
+### Minimal Project
 
 ```sh
-cd minimal
+cd projects/h743zi
 mkdir build && cd build
-cmake ..
+cmake ../minimal
 cmake --build . -j
 ```
 
@@ -60,7 +54,7 @@ cmake --build . -j
 ```sh
 cd freertos
 mkdir build && cd build
-cmake ..
+cmake ../freertos
 cmake --build . -j
 ```
 
@@ -69,7 +63,7 @@ cmake --build . -j
 ```sh
 cd lwip-raw-udp-echoserver
 mkdir build && cd build
-cmake ..
+cmake ../lwip-raw-udp-echoserver
 cmake --build . -j
 ```
 
