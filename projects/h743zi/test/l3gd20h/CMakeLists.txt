@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 set(TARGET_NAME stm32-l3gd20h)
-set(REPO_ROOT "../../")
+set(REPO_ROOT "../../../..")
 set(CMAKE_SCRIPT_PATH ${REPO_ROOT}/cmake)
 set(CMAKE_TOOLCHAIN_FILE ${REPO_ROOT}/stm32-cmake/cmake/stm32_gcc.cmake)
 

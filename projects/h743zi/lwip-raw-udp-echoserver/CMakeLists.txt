@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 set(TARGET_NAME stm32-lwip)
-set(REPO_ROOT "..")
+set(REPO_ROOT "../../..")
 set(CMAKE_SCRIPT_PATH ${REPO_ROOT}/cmake)
 set(STM32_CMAKE_PATH  ${REPO_ROOT}/stm32-cmake)
 

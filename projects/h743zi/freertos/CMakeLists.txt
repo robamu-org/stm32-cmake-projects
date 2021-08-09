@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 set(TARGET_NAME stm32-freertos)
-set(REPO_ROOT "..")
+set(REPO_ROOT "../../..")
 set(STM32_CMAKE_PATH  ${REPO_ROOT}/stm32-cmake)
 
 # Please note: When using CMSIS, it is recommended to use the FreeRTOS version supplied in the 

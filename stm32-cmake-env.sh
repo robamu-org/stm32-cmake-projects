@@ -10,5 +10,9 @@ cd STM32CubeF4
 export STM32_CUBE_F4_PATH=$(pwd)
 echo "Setting STM32_CUBE_F4_PATH to ${STM32_CUBE_F4_PATH}"
 cd ..
+cd STM32CubeF3
+export STM32_CUBE_F3_PATH=$(pwd)
+echo "Setting STM32_CUBE_F3_PATH to ${STM32_CUBE_F3_PATH}"
+cd ..
 
 exec /bin/bash
