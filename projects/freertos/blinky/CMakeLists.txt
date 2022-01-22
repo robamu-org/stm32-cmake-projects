@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 set(TARGET_NAME stm32-freertos)
 
-set(REPO_ROOT "../..")
+set(REPO_ROOT "../../..")
 set(CMAKE_SCRIPTS_PATH ${REPO_ROOT}/cmake)
 
 include(${CMAKE_SCRIPTS_PATH}/CommonSTM.cmake)
