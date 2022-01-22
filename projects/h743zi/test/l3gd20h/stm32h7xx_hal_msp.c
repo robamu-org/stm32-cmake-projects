@@ -1,33 +1,33 @@
 /**
-  ******************************************************************************
-  * @file    SPI/SPI_FullDuplex_ComDMA/Src/stm32h7xx_msp.c
-  * @author  MCD Application Team
-  * @brief   HAL MSP module.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    SPI/SPI_FullDuplex_ComDMA/Src/stm32h7xx_msp.c
+ * @author  MCD Application Team
+ * @brief   HAL MSP module.
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
+ * All rights reserved.</center></h2>
+ *
+ * This software component is licensed by ST under BSD 3-Clause license,
+ * the "License"; You may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at:
+ *                        opensource.org/licenses/BSD-3-Clause
+ *
+ ******************************************************************************
+ */
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
 /** @addtogroup STM32H7xx_HAL_Examples
-  * @{
-  */
+ * @{
+ */
 
 /** @defgroup SPI_FullDuplex_ComDMA
-  * @brief HAL MSP module.
-  * @{
-  */
+ * @brief HAL MSP module.
+ * @{
+ */
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -39,25 +39,23 @@ static DMA_HandleTypeDef hdma_rx;
 /* Private functions ---------------------------------------------------------*/
 
 /** @defgroup HAL_MSP_Private_Functions
-  * @{
-  */
+ * @{
+ */
 
 /**
-  * @brief SPI MSP Initialization 
-  *        This function configures the hardware resources used in this example: 
-  *           - Peripheral's clock enable
-  *           - Peripheral's GPIO Configuration  
-  *           - DMA configuration for transmission request by peripheral 
-  *           - NVIC configuration for DMA interrupt request enable
-  * @param hspi: SPI handle pointer
-  * @retval None
-  */
-void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
-{
-  GPIO_InitTypeDef  GPIO_InitStruct;
-  
-  if (hspi->Instance == SPIx)
-  {
+ * @brief SPI MSP Initialization
+ *        This function configures the hardware resources used in this example:
+ *           - Peripheral's clock enable
+ *           - Peripheral's GPIO Configuration
+ *           - DMA configuration for transmission request by peripheral
+ *           - NVIC configuration for DMA interrupt request enable
+ * @param hspi: SPI handle pointer
+ * @retval None
+ */
+void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi) {
+  GPIO_InitTypeDef GPIO_InitStruct;
+
+  if (hspi->Instance == SPIx) {
     /*##-1- Enable peripherals and GPIO Clocks #################################*/
     /* Enable GPIO TX/RX clock */
     SPIx_SCK_GPIO_CLK_ENABLE();
@@ -68,12 +66,12 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
     /* Enable DMA clock */
     DMAx_CLK_ENABLE();
 
-    /*##-2- Configure peripheral GPIO ##########################################*/  
+    /*##-2- Configure peripheral GPIO ##########################################*/
     /* SPI SCK GPIO pin configuration  */
-    GPIO_InitStruct.Pin       = SPIx_SCK_PIN;
-    GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull      = GPIO_PULLDOWN;
-    GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Pin = SPIx_SCK_PIN;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStruct.Alternate = SPIx_SCK_AF;
     HAL_GPIO_Init(SPIx_SCK_GPIO_PORT, &GPIO_InitStruct);
 
@@ -89,19 +87,19 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 
     /*##-3- Configure the DMA ##################################################*/
     /* Configure the DMA handler for Transmission process */
-    hdma_tx.Instance                 = SPIx_TX_DMA_STREAM;
-    hdma_tx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
-    hdma_tx.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
-    hdma_tx.Init.MemBurst            = DMA_MBURST_INC4;
-    hdma_tx.Init.PeriphBurst         = DMA_PBURST_INC4;
-    hdma_tx.Init.Request             = SPIx_TX_DMA_REQUEST;
-    hdma_tx.Init.Direction           = DMA_MEMORY_TO_PERIPH;
-    hdma_tx.Init.PeriphInc           = DMA_PINC_DISABLE;
-    hdma_tx.Init.MemInc              = DMA_MINC_ENABLE;
+    hdma_tx.Instance = SPIx_TX_DMA_STREAM;
+    hdma_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+    hdma_tx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+    hdma_tx.Init.MemBurst = DMA_MBURST_INC4;
+    hdma_tx.Init.PeriphBurst = DMA_PBURST_INC4;
+    hdma_tx.Init.Request = SPIx_TX_DMA_REQUEST;
+    hdma_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
+    hdma_tx.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_tx.Init.MemInc = DMA_MINC_ENABLE;
     hdma_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-    hdma_tx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
-    hdma_tx.Init.Mode                = DMA_NORMAL;
-    hdma_tx.Init.Priority            = DMA_PRIORITY_LOW;
+    hdma_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    hdma_tx.Init.Mode = DMA_NORMAL;
+    hdma_tx.Init.Priority = DMA_PRIORITY_LOW;
 
     HAL_DMA_Init(&hdma_tx);
 
@@ -109,36 +107,36 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
     __HAL_LINKDMA(hspi, hdmatx, hdma_tx);
 
     /* Configure the DMA handler for Transmission process */
-    hdma_rx.Instance                 = SPIx_RX_DMA_STREAM;
+    hdma_rx.Instance = SPIx_RX_DMA_STREAM;
 
-    hdma_rx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
-    hdma_rx.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
-    hdma_rx.Init.MemBurst            = DMA_MBURST_INC4;
-    hdma_rx.Init.PeriphBurst         = DMA_PBURST_INC4;
-    hdma_rx.Init.Request             = SPIx_RX_DMA_REQUEST;
-    hdma_rx.Init.Direction           = DMA_PERIPH_TO_MEMORY;
-    hdma_rx.Init.PeriphInc           = DMA_PINC_DISABLE;
-    hdma_rx.Init.MemInc              = DMA_MINC_ENABLE;
+    hdma_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+    hdma_rx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+    hdma_rx.Init.MemBurst = DMA_MBURST_INC4;
+    hdma_rx.Init.PeriphBurst = DMA_PBURST_INC4;
+    hdma_rx.Init.Request = SPIx_RX_DMA_REQUEST;
+    hdma_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    hdma_rx.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_rx.Init.MemInc = DMA_MINC_ENABLE;
     hdma_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-    hdma_rx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
-    hdma_rx.Init.Mode                = DMA_NORMAL;
-    hdma_rx.Init.Priority            = DMA_PRIORITY_HIGH;
+    hdma_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    hdma_rx.Init.Mode = DMA_NORMAL;
+    hdma_rx.Init.Priority = DMA_PRIORITY_HIGH;
 
     HAL_DMA_Init(&hdma_rx);
 
     /* Associate the initialized DMA handle to the the SPI handle */
     __HAL_LINKDMA(hspi, hdmarx, hdma_rx);
-    
-    /*##-4- Configure the NVIC for DMA #########################################*/ 
+
+    /*##-4- Configure the NVIC for DMA #########################################*/
     /* NVIC configuration for DMA transfer complete interrupt (SPI1_TX) */
     HAL_NVIC_SetPriority(SPIx_DMA_TX_IRQn, 1, 1);
     HAL_NVIC_EnableIRQ(SPIx_DMA_TX_IRQn);
-    
+
     /* NVIC configuration for DMA transfer complete interrupt (SPI1_RX) */
     HAL_NVIC_SetPriority(SPIx_DMA_RX_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(SPIx_DMA_RX_IRQn);
 
-    /*##-5- Configure the NVIC for SPI #########################################*/ 
+    /*##-5- Configure the NVIC for SPI #########################################*/
     /* NVIC configuration for SPI transfer complete interrupt (SPI1) */
     HAL_NVIC_SetPriority(SPIx_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(SPIx_IRQn);
@@ -146,17 +144,15 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 }
 
 /**
-  * @brief SPI MSP De-Initialization
-  *        This function frees the hardware resources used in this example:
-  *          - Disable the Peripheral's clock
-  *          - Revert GPIO, DMA and NVIC configuration to their default state
-  * @param hspi: SPI handle pointer
-  * @retval None
-  */
-void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi)
-{
-  if(hspi->Instance == SPIx)
-  {   
+ * @brief SPI MSP De-Initialization
+ *        This function frees the hardware resources used in this example:
+ *          - Disable the Peripheral's clock
+ *          - Revert GPIO, DMA and NVIC configuration to their default state
+ * @param hspi: SPI handle pointer
+ * @retval None
+ */
+void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi) {
+  if (hspi->Instance == SPIx) {
     /*##-1- Reset peripherals ##################################################*/
     SPIx_FORCE_RESET();
     SPIx_RELEASE_RESET();
@@ -185,15 +181,15 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi)
 }
 
 /**
-  * @}
-  */
+ * @}
+ */
 
 /**
-  * @}
-  */
+ * @}
+ */
 
 /**
-  * @}
-  */
+ * @}
+ */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -22,6 +22,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+
 #include <stdint.h>
 
 /** @addtogroup STM32H7xx_HAL_Examples
@@ -34,18 +35,9 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-enum {
-  TRANSFER_WAIT,
-  TRANSFER_COMPLETE,
-  TRANSFER_ERROR
-};
+enum { TRANSFER_WAIT, TRANSFER_COMPLETE, TRANSFER_ERROR };
 
-typedef enum {
-    MODE_0,
-    MODE_1,
-    MODE_2,
-    MODE_3
-}SpiModes;
+typedef enum { MODE_0, MODE_1, MODE_2, MODE_3 } SpiModes;
 
 /* Private macro -------------------------------------------------------------*/
 /* Uncomment this line to use the board as master, if not it is used as slave */
@@ -56,10 +48,11 @@ typedef enum {
 SPI_HandleTypeDef SpiHandle;
 
 /* Buffer used for transmission */
-//const uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI Message ********* SPI Message *********";
+// const uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI Message
+// ********* SPI Message *********";
 
 /* Buffer used for reception */
-#define  RX_BUF_LEN  32
+#define RX_BUF_LEN 32
 ALIGN_32BYTES(uint8_t aRxBuffer[RX_BUF_LEN]);
 
 /* transfer state */
@@ -88,16 +81,15 @@ void assignSpiMode(SpiModes spiMode, SPI_HandleTypeDef* spiHandle);
  * @param  None
  * @retval None
  */
-int main(void)
-{
+int main(void) {
   /* Enable the CPU Cache */
   CPU_CACHE_Enable();
 
   /* STM32H7xx HAL library initialization:
-       - Systick timer is configured by default as source of time base, but user 
-         can eventually implement his proper time base source (a general purpose 
-         timer for example or other time source), keeping in mind that Time base 
-         duration should be kept 1ms since PPP_TIMEOUT_VALUEs are defined and 
+       - Systick timer is configured by default as source of time base, but user
+         can eventually implement his proper time base source (a general purpose
+         timer for example or other time source), keeping in mind that Time base
+         duration should be kept 1ms since PPP_TIMEOUT_VALUEs are defined and
          handled in milliseconds basis.
        - Set NVIC Group Priority to 4
        - Low Level Initialization
@@ -114,19 +106,20 @@ int main(void)
 
   /*##-1- Configure the SPI peripheral #######################################*/
   /* Set the SPI parameters */
-  SpiHandle.Instance               = SPIx;
+  SpiHandle.Instance = SPIx;
   SpiHandle.Init.BaudRatePrescaler = getPrescaler(HAL_RCC_GetHCLKFreq(), 10000000);
   assignSpiMode(MODE_3, &SpiHandle);
-  SpiHandle.Init.Direction         = SPI_DIRECTION_2LINES;
-  SpiHandle.Init.DataSize          = SPI_DATASIZE_8BIT;
-  SpiHandle.Init.FirstBit          = SPI_FIRSTBIT_MSB;
-  SpiHandle.Init.TIMode            = SPI_TIMODE_DISABLE;
-  SpiHandle.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
-  SpiHandle.Init.CRCPolynomial     = 7;
-  SpiHandle.Init.CRCLength         = SPI_CRC_LENGTH_8BIT;
-  SpiHandle.Init.NSS               = SPI_NSS_SOFT;
-  SpiHandle.Init.NSSPMode          = SPI_NSS_PULSE_DISABLE;
-  SpiHandle.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_ENABLE;  /* Recommanded setting to avoid glitches */
+  SpiHandle.Init.Direction = SPI_DIRECTION_2LINES;
+  SpiHandle.Init.DataSize = SPI_DATASIZE_8BIT;
+  SpiHandle.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  SpiHandle.Init.TIMode = SPI_TIMODE_DISABLE;
+  SpiHandle.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  SpiHandle.Init.CRCPolynomial = 7;
+  SpiHandle.Init.CRCLength = SPI_CRC_LENGTH_8BIT;
+  SpiHandle.Init.NSS = SPI_NSS_SOFT;
+  SpiHandle.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
+  SpiHandle.Init.MasterKeepIOState =
+      SPI_MASTER_KEEP_IO_STATE_ENABLE; /* Recommanded setting to avoid glitches */
 
 #ifdef MASTER_BOARD
   SpiHandle.Init.Mode = SPI_MODE_MASTER;
@@ -134,8 +127,7 @@ int main(void)
   SpiHandle.Init.Mode = SPI_MODE_SLAVE;
 #endif /* MASTER_BOARD */
 
-  if(HAL_SPI_Init(&SpiHandle) != HAL_OK)
-  {
+  if (HAL_SPI_Init(&SpiHandle) != HAL_OK) {
     /* Initialization Error */
     Error_Handler();
   }
@@ -162,8 +154,8 @@ int main(void)
 
   // Transfer buffer cache maintenance
   // It works without it here..
-//  SCB_CleanDCache_by_Addr((uint32_t*)(((uint32_t)txBuf) & ~(uint32_t)0x1F),
-//          sizeof(txBuf) + 32);
+  //  SCB_CleanDCache_by_Addr((uint32_t*)(((uint32_t)txBuf) & ~(uint32_t)0x1F),
+  //          sizeof(txBuf) + 32);
   txBuf[0] = WHO_AM_I_REG | STM_READ_MASK;
   txBuf[1] = 0;
 
@@ -171,8 +163,7 @@ int main(void)
   /*##-2- Start the Full Duplex Communication process ########################*/
   /* While the SPI in TransmitReceive process, user can transmit data through
      "aTxBuffer" buffer & receive data through "aRxBuffer" */
-  if(HAL_SPI_TransmitReceive_DMA(&SpiHandle, (uint8_t*)txBuf, (uint8_t *)aRxBuffer, 2) != HAL_OK)
-  {
+  if (HAL_SPI_TransmitReceive_DMA(&SpiHandle, (uint8_t*)txBuf, (uint8_t*)aRxBuffer, 2) != HAL_OK) {
     /* Transfer error in transmission process */
     Error_Handler();
   }
@@ -180,40 +171,36 @@ int main(void)
   /*##-3- Wait for the end of the transfer ###################################*/
   /*  Before starting a new communication transfer, you must wait the callback call
       to get the transfer complete confirmation or an error detection.
-      For simplicity reasons, this example is just waiting till the end of the 
+      For simplicity reasons, this example is just waiting till the end of the
       transfer, but application may perform other tasks while transfer operation
-      is ongoing. */  
-  while (wTransferState == TRANSFER_WAIT)
-  {
+      is ongoing. */
+  while (wTransferState == TRANSFER_WAIT) {
   }
 
   /* Invalidate cache prior to access by CPU */
-  SCB_InvalidateDCache_by_Addr ((uint32_t *)aRxBuffer, RX_BUF_LEN);
+  SCB_InvalidateDCache_by_Addr((uint32_t*)aRxBuffer, RX_BUF_LEN);
 
-  switch(wTransferState)
-  {
-  case TRANSFER_COMPLETE :
-    /*##-4- Compare the sent and received buffers ##############################*/
-    if(aRxBuffer[1] == EXPECTED_WHO_AM_I_VAL) {
-      // Successfully read
-      BSP_LED_On(LED1);
-      BSP_LED_On(LED2);
-      BSP_LED_On(LED3);
-    }
-    else {
-      BSP_LED_Off(LED1);
-      BSP_LED_Off(LED2);
-      BSP_LED_Off(LED3);
-    }
-    break;
-  default :
-    Error_Handler();
-    break;
+  switch (wTransferState) {
+    case TRANSFER_COMPLETE:
+      /*##-4- Compare the sent and received buffers ##############################*/
+      if (aRxBuffer[1] == EXPECTED_WHO_AM_I_VAL) {
+        // Successfully read
+        BSP_LED_On(LED1);
+        BSP_LED_On(LED2);
+        BSP_LED_On(LED3);
+      } else {
+        BSP_LED_Off(LED1);
+        BSP_LED_Off(LED2);
+        BSP_LED_Off(LED3);
+      }
+      break;
+    default:
+      Error_Handler();
+      break;
   }
 
   /* Infinite loop */
-  while (1)
-  {
+  while (1) {
   }
 }
 
@@ -222,64 +209,59 @@ uint32_t getPrescaler(uint32_t clock_src_freq, uint32_t baudrate_mbps) {
   uint32_t spi_clk = clock_src_freq;
   uint32_t presc = 0;
   static const uint32_t baudrate[] = {
-      SPI_BAUDRATEPRESCALER_2,
-      SPI_BAUDRATEPRESCALER_4,
-      SPI_BAUDRATEPRESCALER_8,
-      SPI_BAUDRATEPRESCALER_16,
-      SPI_BAUDRATEPRESCALER_32,
-      SPI_BAUDRATEPRESCALER_64,
-      SPI_BAUDRATEPRESCALER_128,
-      SPI_BAUDRATEPRESCALER_256,
+      SPI_BAUDRATEPRESCALER_2,   SPI_BAUDRATEPRESCALER_4,   SPI_BAUDRATEPRESCALER_8,
+      SPI_BAUDRATEPRESCALER_16,  SPI_BAUDRATEPRESCALER_32,  SPI_BAUDRATEPRESCALER_64,
+      SPI_BAUDRATEPRESCALER_128, SPI_BAUDRATEPRESCALER_256,
   };
 
-  while( spi_clk > baudrate_mbps) {
+  while (spi_clk > baudrate_mbps) {
     presc = baudrate[divisor];
-    if (++divisor > 7)
-      break;
+    if (++divisor > 7) break;
 
-    spi_clk = ( spi_clk >> 1);
+    spi_clk = (spi_clk >> 1);
   }
 
   return presc;
 }
 
 void assignSpiMode(SpiModes spiMode, SPI_HandleTypeDef* spiHandle) {
-    switch(spiMode) {
-    case(MODE_0): {
-        spiHandle->Init.CLKPolarity = SPI_POLARITY_LOW;
-        spiHandle->Init.CLKPhase = SPI_PHASE_1EDGE;
-        break;
+  switch (spiMode) {
+    case (MODE_0): {
+      spiHandle->Init.CLKPolarity = SPI_POLARITY_LOW;
+      spiHandle->Init.CLKPhase = SPI_PHASE_1EDGE;
+      break;
     }
-    case(MODE_1): {
-        spiHandle->Init.CLKPolarity = SPI_POLARITY_LOW;
-        spiHandle->Init.CLKPhase = SPI_PHASE_2EDGE;
-        break;
+    case (MODE_1): {
+      spiHandle->Init.CLKPolarity = SPI_POLARITY_LOW;
+      spiHandle->Init.CLKPhase = SPI_PHASE_2EDGE;
+      break;
     }
-    case(MODE_2): {
-        spiHandle->Init.CLKPolarity = SPI_POLARITY_HIGH;
-        spiHandle->Init.CLKPhase = SPI_PHASE_1EDGE;
-        break;
+    case (MODE_2): {
+      spiHandle->Init.CLKPolarity = SPI_POLARITY_HIGH;
+      spiHandle->Init.CLKPhase = SPI_PHASE_1EDGE;
+      break;
     }
-    case(MODE_3): {
-        spiHandle->Init.CLKPolarity = SPI_POLARITY_HIGH;
-        spiHandle->Init.CLKPhase = SPI_PHASE_2EDGE;
-        break;
+    case (MODE_3): {
+      spiHandle->Init.CLKPolarity = SPI_POLARITY_HIGH;
+      spiHandle->Init.CLKPhase = SPI_PHASE_2EDGE;
+      break;
     }
-    }
+  }
 }
 
 // This is a transfer using polling for simple testing
 void simpleTransfer(uint8_t* txBuf) {
-  HAL_StatusTypeDef status = HAL_SPI_TransmitReceive(&SpiHandle, (uint8_t*) txBuf,
-      aRxBuffer, 2, 1000);
-  if(status == HAL_OK) {
-    if(aRxBuffer[1] != EXPECTED_WHO_AM_I_VAL) {
+  HAL_StatusTypeDef status =
+      HAL_SPI_TransmitReceive(&SpiHandle, (uint8_t*)txBuf, aRxBuffer, 2, 1000);
+  if (status == HAL_OK) {
+    if (aRxBuffer[1] != EXPECTED_WHO_AM_I_VAL) {
       // Successfully read
       BSP_LED_On(LED3);
     }
   }
 
-  while(1) {}
+  while (1) {
+  }
 }
 
 /**
@@ -304,8 +286,7 @@ void simpleTransfer(uint8_t* txBuf) {
  * @param  None
  * @retval None
  */
-static void SystemClock_Config(void)
-{
+static void SystemClock_Config(void) {
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
   RCC_OscInitTypeDef RCC_OscInitStruct;
   HAL_StatusTypeDef ret = HAL_OK;
@@ -318,7 +299,8 @@ static void SystemClock_Config(void)
      regarding system frequency refer to product datasheet.  */
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-  while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
+  while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {
+  }
 
   /* Enable HSE Oscillator and activate PLL with HSE as source */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
@@ -338,14 +320,13 @@ static void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_1;
   ret = HAL_RCC_OscConfig(&RCC_OscInitStruct);
-  if(ret != HAL_OK)
-  {
+  if (ret != HAL_OK) {
     Error_Handler();
   }
 
   /* Select PLL as system clock source and configure  bus clocks dividers */
-  RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_D1PCLK1 | RCC_CLOCKTYPE_PCLK1 | \
-      RCC_CLOCKTYPE_PCLK2  | RCC_CLOCKTYPE_D3PCLK1);
+  RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_D1PCLK1 |
+                                 RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2 | RCC_CLOCKTYPE_D3PCLK1);
 
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
@@ -355,11 +336,9 @@ static void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
   ret = HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4);
-  if(ret != HAL_OK)
-  {
+  if (ret != HAL_OK) {
     Error_Handler();
   }
-
 }
 /**
  * @brief  TxRx Transfer completed callback.
@@ -368,8 +347,7 @@ static void SystemClock_Config(void)
  *         you can add your own implementation.
  * @retval None
  */
-void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
-{
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef* hspi) {
   /* Turn LED1 on: Transfer in transmission process is complete */
   BSP_LED_On(LED1);
   /* Turn LED2 on: Transfer in reception process is complete */
@@ -385,8 +363,7 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
  *         add your own implementation.
  * @retval None
  */
-void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
-{
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef* hspi) {
   wTransferState = TRANSFER_ERROR;
   HAL_GPIO_WritePin(chipSelectPort, chipSelectPin, GPIO_PIN_SET);
 }
@@ -396,17 +373,15 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
  * @param  None
  * @retval None
  */
-static void Error_Handler(void)
-{
+static void Error_Handler(void) {
   BSP_LED_Off(LED1);
   /* Turn LED3 on */
   BSP_LED_On(LED3);
-  while(1)
-  {
+  while (1) {
   }
 }
 
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
  * @brief  Reports the name of the source file and the source line number
  *         where the assert_param error has occurred.
@@ -414,14 +389,12 @@ static void Error_Handler(void)
  * @param  line: assert_param error line source number
  * @retval None
  */
-void assert_failed(uint8_t* file, uint32_t line)
-{
+void assert_failed(uint8_t* file, uint32_t line) {
   /* User can add his own implementation to report the file name and line number,
      ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
 
   /* Infinite loop */
-  while (1)
-  {
+  while (1) {
   }
 }
 #endif
@@ -431,8 +404,7 @@ void assert_failed(uint8_t* file, uint32_t line)
  * @param  None
  * @retval None
  */
-static void CPU_CACHE_Enable(void)
-{
+static void CPU_CACHE_Enable(void) {
   /* Enable I-Cache */
   SCB_EnableICache();
 

@@ -9,9 +9,8 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include <stdbool.h>
-
+#include <stdint.h>
 #include <stm32h7xx_hal.h>
 #include <stm32h7xx_hal_gpio.h>
 #include <stm32h7xx_hal_uart.h>

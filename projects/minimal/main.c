@@ -1,5 +1,5 @@
-int main(void)
-{
-    for (;;);
-    return 0;
+int main(void) {
+  for (;;)
+    ;
+  return 0;
 }
