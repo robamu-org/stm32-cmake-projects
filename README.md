@@ -71,6 +71,27 @@ cmake ../h743zi/lwip-raw-udp-echoserver
 cmake --build . -j
 ```
 
+# Debugging the application
+
+Some basic OpenOCD launch configurations were provided. It is expected that the user starts
+the OpenOCD application.
+
+For example, to open an OpenOCD session specifically for the STM32H743ZI-Nucleo, perform
+the following steps
+
+```sh
+cd projects/h743zi
+openocd
+```
+
+Now you can flash the application with a GDB application like `arm-none-eabi-gdb` or `gdb-multiarch`.
+You can try this in the command line as well (here with `gdb-multiarch`):
+
+```sh
+cd projects
+gdb-multiarch -q -x h743zi/openocd.gdb build/stm32.elf
+```
+
 # Testing the LwIP UDP Echoserver
 
 Connect the STM32H743ZIT to your router via Ethernet. The STM32 device should now get
