@@ -1,13 +1,5 @@
-# Build folders
-/**/build*
-!cmake/*.cmake
+build
 
-# VS Code
-.vscode/.*
-
-# Eclipse
-.settings
-.cproject
-.project
-!eclipse/**/.cproject
-!eclipse/**/.project
+/.settings
+/.cproject
+/.project
