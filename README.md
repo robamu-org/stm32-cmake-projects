@@ -28,7 +28,7 @@ Afer that, run the following command in the MinGW64 shell to install `make` and 
 pacman -S mingw-w64-x86_64-cmake mingw-w64-x86_64-make
 ```
 
-# Building the Minimal Project or the FreeRTOS project
+# Building the Projects
 
 The project expect the folder containing the toolchain binaries to be in the environment
 path.
@@ -91,4 +91,3 @@ line with
 ```sh
 code --install-extension marus25.cortex-debug
 ```
-
