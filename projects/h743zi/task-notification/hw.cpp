@@ -1,21 +1,16 @@
 #include "hw.h"
 
-#include "stm32h743xx.h"
-#include "stm32h7xx_hal_rcc_ex.h"
-#include "stm32h7xx_nucleo.h"
 
 /**
  * ST-LINK UART3
  * CN5 pins on board
  */
-UART_HandleTypeDef huart3;
+UART_HandleTypeDef HUART_3;
 GPIO_InitTypeDef gpio_uart_init_struct;
 
 void hw::init() {
-  SystemInit();
   CPU_CACHE_Enable();
   MX_USART3_UART_Init(115200);
-  SystemClock_Config();
   BSP_Config();
 }
 
@@ -32,22 +27,22 @@ void hw::MX_USART3_UART_Init(uint32_t baudRate) {
   HAL_GPIO_Init(GPIOD, &gpio_uart_init_struct);
 
   int result;
-  huart3.Instance = USART3;
-  huart3.Init.BaudRate = baudRate;
-  huart3.Init.WordLength = UART_WORDLENGTH_8B;
-  huart3.Init.StopBits = UART_STOPBITS_1;
-  huart3.Init.Parity = UART_PARITY_NONE;
-  huart3.Init.Mode = UART_MODE_TX_RX;
-  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart3.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  HUART_3.Instance = USART3;
+  HUART_3.Init.BaudRate = baudRate;
+  HUART_3.Init.WordLength = UART_WORDLENGTH_8B;
+  HUART_3.Init.StopBits = UART_STOPBITS_1;
+  HUART_3.Init.Parity = UART_PARITY_NONE;
+  HUART_3.Init.Mode = UART_MODE_TX_RX;
+  HUART_3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  HUART_3.Init.OverSampling = UART_OVERSAMPLING_16;
+  HUART_3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  HUART_3.Init.ClockPrescaler = UART_PRESCALER_DIV1;
   // huart3.Init.FIFOMode = UART_FIFOMODE_DISABLE;
   // huart3.Init.TXFIFOThreshold = UART_TXFIFO_THRESHOLD_1_8;
   // huart3.Init.RXFIFOThreshold = UART_RXFIFO_THRESHOLD_1_8;
-  huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  HUART_3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
   // we can't do error handling (simple print out first) here because UART3 is our print interface
-  result = HAL_UART_Init(&huart3);
+  result = HAL_UART_Init(&HUART_3);
   if (result == HAL_OK) {
     // print_uart3("\rUART3 configured successfully !\r\n\0");
   }

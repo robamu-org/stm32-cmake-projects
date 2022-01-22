@@ -65,6 +65,7 @@ target_sources(${TARGET_NAME} PRIVATE
     main.cpp
     hw.cpp
     stm32h7xx_nucleo.c
+    syscalls.c
     FreeRTOSConfig.h
 )
 

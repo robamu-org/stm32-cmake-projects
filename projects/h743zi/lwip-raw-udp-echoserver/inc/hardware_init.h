@@ -19,7 +19,7 @@ extern "C" {
  * Declaration of global hardware handlers here.
  * Definition inside respective .cpp or .c files.
  */
-extern UART_HandleTypeDef huart3;
+extern UART_HandleTypeDef HUART_3;
 extern GPIO_InitTypeDef gpio_uart_init_struct;
 extern struct netif gnetif; /* network interface structure */
 

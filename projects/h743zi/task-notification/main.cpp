@@ -1,10 +1,12 @@
 #include "hw.h"
+#include "stm32h7xx_nucleo.h"
 
 #include <FreeRTOS.h>
 #include <task.h>
 #include <timers.h>
 
-#include "stm32h7xx_nucleo.h"
+
+#include <cstdio>
 
 static void blinky(void *arg) {
   for (;;) {
@@ -16,7 +18,7 @@ static void blinky(void *arg) {
 int main(void) {
   hw::init();
 
-
+  printf("-- STM32 Task Notification Test --\n");
   xTaskCreate(blinky, "blinky", configMINIMAL_STACK_SIZE * 4, NULL, tskIDLE_PRIORITY + 1, NULL);
 
   vTaskStartScheduler();
