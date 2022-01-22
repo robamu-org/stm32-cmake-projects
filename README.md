@@ -38,7 +38,7 @@ to use the Ninja build system.
 You can flash the generated binary file to the connect board via drag-and-drop
 or you can use Eclipse and OpenOCD to perform debugging with the `.elf` file.
 
-## All Boards
+## Multi-Board Projects
 
 Supply board: `-DBUILD_H743ZI=ON` and/or `-DBUILD_F303VC=ON`.
 
