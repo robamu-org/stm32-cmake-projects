@@ -3,3 +3,6 @@ build
 /.settings
 /.cproject
 /.project
+
+# xpm
+/package.json
