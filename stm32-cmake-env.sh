@@ -14,8 +14,7 @@ echo "Setting STM32_CUBE_F3_PATH to ${STM32_CUBE_F3_PATH}"
 cd ..
 
 export PATH="$(pwd)/xpacks/.bin":$PATH
-export STM32_TOOLCHAIN_PATH="$(pwd)/xpacks/xpack-dev-tools-arm-none-eabi-gcc/.content/arm-none-eabi
-"
+export STM32_TOOLCHAIN_PATH="$(pwd)/xpacks/xpack-dev-tools-arm-none-eabi-gcc/.content"
 export REPO_ROOT="$(pwd)"
 
 exec /bin/bash

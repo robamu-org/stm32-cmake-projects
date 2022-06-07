@@ -20,7 +20,7 @@ if(BUILD_F303VC)
 endif()
 
 find_package(CMSIS COMPONENTS "${CMSIS_COMP_LIST}" REQUIRED)
-find_package(etl 20 CONFIG REQUIRED)
+find_package(fmt 8 CONFIG REQUIRED)
 
 add_executable(${TARGET_NAME})
 
