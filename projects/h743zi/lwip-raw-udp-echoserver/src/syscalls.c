@@ -50,11 +50,11 @@ int _write(int file, const void *ptr, size_t len) {
     for (i = 0; i < len; i++) {
 #if AUTO_RETURN_AFTER_NEWLINE
       if (((const char *)ptr)[i] == '\n' && ((const char *)ptr)[i + 1] != '\r') {
-        HAL_UART_Transmit(&huart3, (uint8_t *)"\r", 1, STM32_LWIP_UART_TIMEOUT);
+        HAL_UART_Transmit(&HUART_3, (uint8_t *)"\r", 1, STM32_LWIP_UART_TIMEOUT);
       }
 #endif
       uint8_t *character = (uint8_t *)ptr;
-      HAL_UART_Transmit(&huart3, (uint8_t *)(character + i), 1, STM32_LWIP_UART_TIMEOUT);
+      HAL_UART_Transmit(&HUART_3, (uint8_t *)(character + i), 1, STM32_LWIP_UART_TIMEOUT);
     }
     return len;
   } else {
