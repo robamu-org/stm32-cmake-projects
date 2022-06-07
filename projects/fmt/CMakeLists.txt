@@ -19,8 +19,24 @@ if(BUILD_F303VC)
     list(APPEND CMSIS_COMP_LIST STM32F3)
 endif()
 
+
 find_package(CMSIS COMPONENTS "${CMSIS_COMP_LIST}" REQUIRED)
-find_package(fmt 8 CONFIG REQUIRED)
+
+set(FMT_TEST OFF)
+set(FMT_OS OFF)
+FetchContent_Declare(
+    fmt
+    GIT_REPOSITORY https://github.com/fmtlib/fmt
+    GIT_TAG 8.1.1
+)
+FetchContent_MakeAvailable(fmt)
+
+# Necessary to add important architecture flags to fmt build process
+if(BUILD_H743ZI)
+    target_link_libraries(fmt PRIVATE
+        CMSIS::STM32::H743ZI::M7
+    )
+endif()
 
 add_executable(${TARGET_NAME})
 
@@ -30,7 +46,7 @@ target_sources(${TARGET_NAME} PRIVATE
 
 target_link_libraries(${TARGET_NAME} PRIVATE
     STM32::NoSys
-    etl::etl
+    fmt::fmt
 )
 if(BUILD_H743ZI)
     target_link_libraries(${TARGET_NAME} PRIVATE
