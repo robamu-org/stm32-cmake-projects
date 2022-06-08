@@ -7,7 +7,7 @@
             "label": "Build FreeRTOS",
             "type": "shell",
             "options": {
-                "cwd": "${workspaceRoot}/freertos/build"
+                "cwd": "${workspaceRoot}/projects/freertos/blinky/build"
             },
             "command": "cmake",
             "args": [
@@ -25,7 +25,25 @@
             "label": "Build Minimal",
             "type": "shell",
             "options": {
-                "cwd": "${workspaceRoot}/minimal/build"
+                "cwd": "${workspaceRoot}/projects/minimal/build"
+            },
+            "command": "cmake",
+            "args": [
+                "--build",
+                ".",
+                "-j"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Build ETL",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceRoot}/projects/etl/build"
             },
             "command": "cmake",
             "args": [

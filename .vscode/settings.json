@@ -1,5 +1,4 @@
 {
-    // OS specific path not allowed yet. This is a Windows path example
-    "cortex-debug.armToolchainPath": "C:/Users/Robin/AppData/Roaming/xPacks/@xpack-dev-tools/arm-none-eabi-gcc/10.2.1-1.1.2/.content/bin"
-
+    "cortex-debug.armToolchainPath.linux": "$HOME/.local/xPacks/@xpack-dev-tools/arm-none-eabi-gcc/11.2.1-1.1.1/.content/bin",
+    "cortex-debug.armToolchainPath.windows": "C:/Users/Robin/AppData/Roaming/xPacks/@xpack-dev-tools/arm-none-eabi-gcc/11.2.1-1.1.1/.content/bin"
 }

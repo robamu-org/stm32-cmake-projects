@@ -44,5 +44,7 @@ endif()
 
 generate_generic_executable_file()
 
+stm32_print_size_of_target(${TARGET_NAME})
+
 include(${CMAKE_SCRIPTS_PATH}/BuildType.cmake)
 set_build_type()
